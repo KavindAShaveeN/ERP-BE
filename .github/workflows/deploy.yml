@@ -1,0 +1,280 @@
+name: RR ERP API CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: rr-erp-api/dev
+  CONTAINER_NAME: rr-erp-api
+  APP_PORT: 8080
+
+jobs:
+
+  # =========================================================
+  # CI - Test, Build and Push Docker Image
+  # =========================================================
+
+  build-and-push:
+    name: Build and Push to ECR
+    runs-on: ubuntu-latest
+
+    outputs:
+      image_uri: ${{ steps.image.outputs.image_uri }}
+
+    steps:
+
+      # -----------------------------------------------------
+      # Checkout
+      # -----------------------------------------------------
+
+      - name: Checkout source code
+        uses: actions/checkout@v7
+
+
+      # -----------------------------------------------------
+      # Java
+      # -----------------------------------------------------
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+
+      # -----------------------------------------------------
+      # Test
+      # -----------------------------------------------------
+
+      - name: Run tests
+        run: |
+          chmod +x mvnw
+          ./mvnw clean test
+
+
+      # -----------------------------------------------------
+      # AWS authentication using GitHub OIDC
+      # -----------------------------------------------------
+      - name: Show GitHub OIDC subject
+        shell: bash
+        run: |
+          TOKEN_RESPONSE=$(curl -sS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
+          ID_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.value')
+
+          python3 - "$ID_TOKEN" <<'PY'
+          import sys
+          import json
+          import base64
+
+          token = sys.argv[1]
+
+          payload = token.split('.')[1]
+          payload += '=' * (-len(payload) % 4)
+
+          claims = json.loads(
+             base64.urlsafe_b64decode(payload).decode()
+          )
+          print("======================================")
+          print("OIDC audience:", claims.get("aud"))
+          print("OIDC subject :", claims.get("sub"))
+          print("Repository   :", claims.get("repository"))
+          print("Ref          :", claims.get("ref"))
+          print("======================================")
+          PY
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+
+      # -----------------------------------------------------
+      # Login to ECR
+      # -----------------------------------------------------
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+
+      # -----------------------------------------------------
+      # Generate image URI
+      # -----------------------------------------------------
+
+      - name: Set image URI
+        id: image
+        run: |
+          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${GITHUB_SHA}"
+
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+
+
+      # -----------------------------------------------------
+      # Docker build
+      # -----------------------------------------------------
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t $IMAGE_URI \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest \
+            .
+
+
+      # -----------------------------------------------------
+      # Docker push
+      # -----------------------------------------------------
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push $IMAGE_URI
+
+          docker push \
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+
+
+  # =========================================================
+  # CD - Deploy Image to EC2
+  # =========================================================
+
+  deploy:
+    name: Deploy to EC2
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # -----------------------------------------------------
+      # Configure SSH
+      # -----------------------------------------------------
+
+      - name: Configure SSH key
+        run: |
+          mkdir -p ~/.ssh
+
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2.pem
+
+          chmod 600 ~/.ssh/ec2.pem
+
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" \
+            >> ~/.ssh/known_hosts
+
+
+      # -----------------------------------------------------
+      # Deploy
+      # -----------------------------------------------------
+
+      - name: Deploy Docker container
+        env:
+          IMAGE_URI: ${{ needs.build-and-push.outputs.image_uri }}
+        run: |
+
+          ssh \
+            -i ~/.ssh/ec2.pem \
+            ubuntu@${{ secrets.EC2_HOST }} \
+            "IMAGE_URI='$IMAGE_URI' \
+             AWS_REGION='${{ env.AWS_REGION }}' \
+             CONTAINER_NAME='${{ env.CONTAINER_NAME }}' \
+             APP_PORT='${{ env.APP_PORT }}' \
+             bash -s" << 'EOF'
+
+          set -e
+
+          echo "========================================"
+          echo "Starting RR ERP API deployment"
+          echo "========================================"
+
+
+          # -----------------------------------------------
+          # Determine ECR Registry
+          # -----------------------------------------------
+
+          ECR_REGISTRY=$(echo "$IMAGE_URI" | cut -d/ -f1)
+
+
+          # -----------------------------------------------
+          # Authenticate Docker with ECR
+          # -----------------------------------------------
+
+          echo "Logging into Amazon ECR..."
+
+          aws ecr get-login-password \
+            --region "$AWS_REGION" |
+          sudo docker login \
+            --username AWS \
+            --password-stdin "$ECR_REGISTRY"
+
+
+          # -----------------------------------------------
+          # Pull new Docker image
+          # -----------------------------------------------
+
+          echo "Pulling image: $IMAGE_URI"
+
+          sudo docker pull "$IMAGE_URI"
+
+
+          # -----------------------------------------------
+          # Stop existing container
+          # -----------------------------------------------
+
+          echo "Stopping existing container..."
+
+          sudo docker stop "$CONTAINER_NAME" || true
+
+
+          # -----------------------------------------------
+          # Remove existing container
+          # -----------------------------------------------
+
+          echo "Removing existing container..."
+
+          sudo docker rm "$CONTAINER_NAME" || true
+
+
+          # -----------------------------------------------
+          # Run new container
+          # -----------------------------------------------
+
+          echo "Starting new container..."
+
+          sudo docker run \
+            -d \
+            --name "$CONTAINER_NAME" \
+            --restart unless-stopped \
+            -p "$APP_PORT:8080" \
+            --env-file /opt/rr-erp/.env \
+            "$IMAGE_URI"
+
+
+          # -----------------------------------------------
+          # Show running containers
+          # -----------------------------------------------
+
+          sudo docker ps
+
+
+          # -----------------------------------------------
+          # Clean unused images
+          # -----------------------------------------------
+
+          sudo docker image prune -f
+
+
+          echo "========================================"
+          echo "Deployment completed successfully"
+          echo "========================================"
+
+          EOF

@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: erp
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
+  datasource:
+    # ===== DEV DATABASE (previous) =====
+     url: jdbc:postgresql://rr-erp-dev-1.c1w2q88eiv7d.eu-north-1.rds.amazonaws.com:5432/postgres
+     username: postgres
+     password: WIINerprr001#$&
+
+    # ===== PROD DATABASE =====
+#    url: jdbc:postgresql://rr-erp-db-prod.cn0u24eg21dc.ap-south-1.rds.amazonaws.com:5432/postgres
+#    username: rr_admin
+#    password: RRERP-Prod-21#$
+     driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+    ddl-auto: update
+    show-sql: true

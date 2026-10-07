@@ -1,8 +1,12 @@
--- DROP SCHEMA public;
+-- WARNING: wipes everything in the public schema so the script can be re-run from scratch.
+DROP SCHEMA IF EXISTS public CASCADE;
 
-CREATE SCHEMA public AUTHORIZATION pg_database_owner;
+CREATE SCHEMA public;
 
 COMMENT ON SCHEMA public IS 'standard public schema';
+
+-- Extensions (gen_random_uuid, crypt, digest, etc. come from pgcrypto)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- DROP SEQUENCE asset_code_asset_code_id_seq;
 
@@ -49,9 +53,27 @@ CREATE SEQUENCE consumable_item_consumable_item_id_seq
 	START 1
 	CACHE 1
 	NO CYCLE;
+-- DROP SEQUENCE consumable_item_consumable_item_id_seq1;
+
+CREATE SEQUENCE consumable_item_consumable_item_id_seq1
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
 -- DROP SEQUENCE credentials_credential_id_seq;
 
 CREATE SEQUENCE credentials_credential_id_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE credentials_credential_id_seq1;
+
+CREATE SEQUENCE credentials_credential_id_seq1
 	INCREMENT BY 1
 	MINVALUE 1
 	MAXVALUE 2147483647
@@ -67,9 +89,27 @@ CREATE SEQUENCE currency_currency_id_seq
 	START 1
 	CACHE 1
 	NO CYCLE;
+-- DROP SEQUENCE currency_currency_id_seq1;
+
+CREATE SEQUENCE currency_currency_id_seq1
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
 -- DROP SEQUENCE designation_designationid_seq;
 
 CREATE SEQUENCE designation_designationid_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE designation_designationid_seq1;
+
+CREATE SEQUENCE designation_designationid_seq1
 	INCREMENT BY 1
 	MINVALUE 1
 	MAXVALUE 2147483647
@@ -85,9 +125,27 @@ CREATE SEQUENCE employeestatus_employeestatusid_seq
 	START 1
 	CACHE 1
 	NO CYCLE;
+-- DROP SEQUENCE employeestatus_employeestatusid_seq1;
+
+CREATE SEQUENCE employeestatus_employeestatusid_seq1
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
 -- DROP SEQUENCE gin_type_gin_type_id_seq;
 
 CREATE SEQUENCE gin_type_gin_type_id_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE gin_type_gin_type_id_seq1;
+
+CREATE SEQUENCE gin_type_gin_type_id_seq1
 	INCREMENT BY 1
 	MINVALUE 1
 	MAXVALUE 2147483647
@@ -103,9 +161,27 @@ CREATE SEQUENCE inventory_item_inventory_item_id_seq
 	START 1
 	CACHE 1
 	NO CYCLE;
+-- DROP SEQUENCE inventory_item_inventory_item_id_seq1;
+
+CREATE SEQUENCE inventory_item_inventory_item_id_seq1
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
 -- DROP SEQUENCE issue_item_type_issue_item_type_id_seq;
 
 CREATE SEQUENCE issue_item_type_issue_item_type_id_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE issue_item_type_issue_item_type_id_seq1;
+
+CREATE SEQUENCE issue_item_type_issue_item_type_id_seq1
 	INCREMENT BY 1
 	MINVALUE 1
 	MAXVALUE 2147483647
@@ -121,9 +197,27 @@ CREATE SEQUENCE item_brand_item_brand_id_seq
 	START 1
 	CACHE 1
 	NO CYCLE;
+-- DROP SEQUENCE item_brand_item_brand_id_seq1;
+
+CREATE SEQUENCE item_brand_item_brand_id_seq1
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
 -- DROP SEQUENCE item_category_item_category_id_seq;
 
 CREATE SEQUENCE item_category_item_category_id_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE item_category_item_category_id_seq1;
+
+CREATE SEQUENCE item_category_item_category_id_seq1
 	INCREMENT BY 1
 	MINVALUE 1
 	MAXVALUE 2147483647
@@ -139,9 +233,27 @@ CREATE SEQUENCE item_code_item_code_id_seq
 	START 1
 	CACHE 1
 	NO CYCLE;
+-- DROP SEQUENCE item_code_item_code_id_seq1;
+
+CREATE SEQUENCE item_code_item_code_id_seq1
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
 -- DROP SEQUENCE item_model_item_model_id_seq;
 
 CREATE SEQUENCE item_model_item_model_id_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE item_model_item_model_id_seq1;
+
+CREATE SEQUENCE item_model_item_model_id_seq1
 	INCREMENT BY 1
 	MINVALUE 1
 	MAXVALUE 2147483647
@@ -157,9 +269,27 @@ CREATE SEQUENCE item_optional1_item_optional1_id_seq
 	START 1
 	CACHE 1
 	NO CYCLE;
+-- DROP SEQUENCE item_optional1_item_optional1_id_seq1;
+
+CREATE SEQUENCE item_optional1_item_optional1_id_seq1
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
 -- DROP SEQUENCE item_optional2_item_optional2_id_seq;
 
 CREATE SEQUENCE item_optional2_item_optional2_id_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE item_optional2_item_optional2_id_seq1;
+
+CREATE SEQUENCE item_optional2_item_optional2_id_seq1
 	INCREMENT BY 1
 	MINVALUE 1
 	MAXVALUE 2147483647
@@ -175,9 +305,27 @@ CREATE SEQUENCE item_optional3_item_optional3_id_seq
 	START 1
 	CACHE 1
 	NO CYCLE;
+-- DROP SEQUENCE item_optional3_item_optional3_id_seq1;
+
+CREATE SEQUENCE item_optional3_item_optional3_id_seq1
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
 -- DROP SEQUENCE item_subcategory_item_subcategory_id_seq;
 
 CREATE SEQUENCE item_subcategory_item_subcategory_id_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE item_subcategory_item_subcategory_id_seq1;
+
+CREATE SEQUENCE item_subcategory_item_subcategory_id_seq1
 	INCREMENT BY 1
 	MINVALUE 1
 	MAXVALUE 2147483647
@@ -193,9 +341,27 @@ CREATE SEQUENCE item_subsubcategory_item_subsubcategory_id_seq
 	START 1
 	CACHE 1
 	NO CYCLE;
+-- DROP SEQUENCE item_subsubcategory_item_subsubcategory_id_seq1;
+
+CREATE SEQUENCE item_subsubcategory_item_subsubcategory_id_seq1
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
 -- DROP SEQUENCE item_type_item_type_id_seq;
 
 CREATE SEQUENCE item_type_item_type_id_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE item_type_item_type_id_seq1;
+
+CREATE SEQUENCE item_type_item_type_id_seq1
 	INCREMENT BY 1
 	MINVALUE 1
 	MAXVALUE 2147483647
@@ -247,6 +413,15 @@ CREATE SEQUENCE project_projectid_seq
 	START 1
 	CACHE 1
 	NO CYCLE;
+-- DROP SEQUENCE project_projectid_seq1;
+
+CREATE SEQUENCE project_projectid_seq1
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
 -- DROP SEQUENCE project_type_project_type_id_seq;
 
 CREATE SEQUENCE project_type_project_type_id_seq
@@ -256,9 +431,27 @@ CREATE SEQUENCE project_type_project_type_id_seq
 	START 1
 	CACHE 1
 	NO CYCLE;
+-- DROP SEQUENCE project_type_project_type_id_seq1;
+
+CREATE SEQUENCE project_type_project_type_id_seq1
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
 -- DROP SEQUENCE projectstatus_projectstatusid_seq;
 
 CREATE SEQUENCE projectstatus_projectstatusid_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE projectstatus_projectstatusid_seq1;
+
+CREATE SEQUENCE projectstatus_projectstatusid_seq1
 	INCREMENT BY 1
 	MINVALUE 1
 	MAXVALUE 2147483647
@@ -277,6 +470,24 @@ CREATE SEQUENCE service_item_service_item_id_seq
 -- DROP SEQUENCE subcontractor_subcontractor_id_seq;
 
 CREATE SEQUENCE subcontractor_subcontractor_id_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 2147483647
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE transport_trip_code_seq;
+
+CREATE SEQUENCE transport_trip_code_seq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 9223372036854775807
+	START 1
+	CACHE 1
+	NO CYCLE;
+-- DROP SEQUENCE uom_uom_id_seq;
+
+CREATE SEQUENCE uom_uom_id_seq
 	INCREMENT BY 1
 	MINVALUE 1
 	MAXVALUE 2147483647
@@ -340,6 +551,22 @@ CREATE TABLE employeestatus (
 	employeestatusname varchar(50) NOT NULL,
 	CONSTRAINT pk_employee_status PRIMARY KEY (employeestatusid),
 	CONSTRAINT uq_employee_status_name UNIQUE (employeestatusname)
+);
+
+
+-- public.fault_type definition
+
+-- Drop table
+
+-- DROP TABLE fault_type;
+
+CREATE TABLE fault_type (
+	fault_code varchar(60) NOT NULL,
+	"label" varchar(500) NOT NULL,
+	category varchar(100) NOT NULL,
+	is_active bool DEFAULT true NOT NULL,
+	CONSTRAINT fault_type_label_key UNIQUE (label),
+	CONSTRAINT fault_type_pkey PRIMARY KEY (fault_code)
 );
 
 
@@ -484,7 +711,7 @@ CREATE TABLE service_schedule_template (
 	cycle_length numeric(12, 2) NULL,
 	CONSTRAINT service_schedule_template_asset_type_code_meter_unit_key UNIQUE (asset_type_code, meter_unit),
 	CONSTRAINT service_schedule_template_cycle_length_check CHECK ((cycle_length > (0)::numeric)),
-	CONSTRAINT service_schedule_template_meter_unit_check CHECK (((meter_unit)::text = ANY ((ARRAY['KM'::character varying, 'HOURS'::character varying])::text[]))),
+	CONSTRAINT service_schedule_template_meter_unit_check CHECK (((meter_unit)::text = ANY (ARRAY[('KM'::character varying)::text, ('HOURS'::character varying)::text]))),
 	CONSTRAINT service_schedule_template_pkey PRIMARY KEY (template_id)
 );
 
@@ -560,21 +787,6 @@ CREATE TABLE workshop_department (
 	workshop_department_name varchar(60) NOT NULL,
 	CONSTRAINT workshop_department_pkey PRIMARY KEY (workshop_department_id),
 	CONSTRAINT workshop_department_workshop_department_name_key UNIQUE (workshop_department_name)
-);
-
-
--- public.asset_code definition
-
--- Drop table
-
--- DROP TABLE asset_code;
-
-CREATE TABLE asset_code (
-	asset_code_id serial4 NOT NULL,
-	asset_code_code varchar(100) NOT NULL,
-	item_code_id int4 NULL,
-	CONSTRAINT asset_code_asset_code_code_key UNIQUE (asset_code_code),
-	CONSTRAINT asset_code_pkey PRIMARY KEY (asset_code_id)
 );
 
 
@@ -689,6 +901,29 @@ CREATE TABLE item_subsubcategory (
 );
 
 
+-- public.login_history definition
+
+-- Drop table
+
+-- DROP TABLE login_history;
+
+CREATE TABLE login_history (
+	login_history_id uuid DEFAULT gen_random_uuid() NOT NULL,
+	user_name varchar(100) NOT NULL,
+	employee_code varchar(50) NULL,
+	login_status varchar(30) NOT NULL,
+	login_time timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	logout_time timestamp NULL,
+	ip_address varchar(45) NULL,
+	user_agent varchar(500) NULL,
+	CONSTRAINT login_history_pkey PRIMARY KEY (login_history_id),
+	CONSTRAINT login_history_status_check CHECK (((login_status)::text = ANY ((ARRAY['SUCCESS'::character varying, 'FAILED_BAD_PASSWORD'::character varying, 'FAILED_UNKNOWN_USER'::character varying])::text[]))),
+	CONSTRAINT fk_login_history_employee FOREIGN KEY (employee_code) REFERENCES employee(employee_code)
+);
+CREATE INDEX idx_login_history_employee_time ON public.login_history USING btree (employee_code, login_time DESC);
+CREATE INDEX idx_login_history_login_time ON public.login_history USING btree (login_time DESC);
+
+
 -- public.plant_production definition
 
 -- Drop table
@@ -717,7 +952,7 @@ CREATE TABLE plant_production (
 	created_date timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT plant_production_pkey PRIMARY KEY (production_id),
 	CONSTRAINT plant_production_production_code_key UNIQUE (production_code),
-	CONSTRAINT plant_production_status_check CHECK (((status)::text = ANY ((ARRAY['DRAFT'::character varying, 'SUBMITTED'::character varying, 'APPROVED'::character varying, 'REJECTED'::character varying, 'REVERSED'::character varying])::text[]))),
+	CONSTRAINT plant_production_status_check CHECK (((status)::text = ANY (ARRAY[('DRAFT'::character varying)::text, ('SUBMITTED'::character varying)::text, ('APPROVED'::character varying)::text, ('REJECTED'::character varying)::text, ('REVERSED'::character varying)::text]))),
 	CONSTRAINT plant_production_recipe_id_fkey FOREIGN KEY (recipe_id) REFERENCES plant_recipe(recipe_id) ON DELETE SET NULL
 );
 CREATE INDEX idx_plant_production_project ON public.plant_production USING btree (project_code, production_date);
@@ -993,29 +1228,6 @@ CREATE TABLE credentials (
 );
 
 
--- public.login_history definition
-
--- Drop table
-
--- DROP TABLE login_history;
-
-CREATE TABLE login_history (
-	login_history_id uuid DEFAULT gen_random_uuid() NOT NULL,
-	user_name varchar(100) NOT NULL,
-	employee_code varchar(50) NULL,
-	login_status varchar(30) NOT NULL,
-	login_time timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	logout_time timestamp NULL,
-	ip_address varchar(45) NULL,
-	user_agent varchar(500) NULL,
-	CONSTRAINT login_history_pkey PRIMARY KEY (login_history_id),
-	CONSTRAINT login_history_status_check CHECK (((login_status)::text = ANY ((ARRAY['SUCCESS'::character varying, 'FAILED_BAD_PASSWORD'::character varying, 'FAILED_UNKNOWN_USER'::character varying])::text[]))),
-	CONSTRAINT fk_login_history_employee FOREIGN KEY (employee_code) REFERENCES employee(employee_code)
-);
-CREATE INDEX idx_login_history_employee_time ON public.login_history USING btree (employee_code, login_time DESC);
-CREATE INDEX idx_login_history_login_time ON public.login_history USING btree (login_time DESC);
-
-
 -- public.item_brand definition
 
 -- Drop table
@@ -1254,95 +1466,6 @@ CREATE INDEX idx_supplier_payment_project ON public.supplier_payment USING btree
 CREATE INDEX idx_supplier_payment_supplier ON public.supplier_payment USING btree (supplier_code);
 
 
--- public.gin definition
-
--- Drop table
-
--- DROP TABLE gin;
-
-CREATE TABLE gin (
-	gin_id uuid NOT NULL,
-	gin_code varchar(50) NOT NULL,
-	gin_type_id int4 NOT NULL,
-	issued_date timestamp NULL,
-	issued_project_code varchar(50) NULL,
-	received_project_code varchar(50) NULL,
-	received_by varchar(50) NULL,
-	vehicle_no varchar(50) NULL,
-	approved_by varchar(50) NULL,
-	approved_date timestamp NULL,
-	is_authorized bool DEFAULT false NOT NULL,
-	expected_return_date date NULL,
-	receiver_name varchar(255) NULL,
-	receiver_nic varchar(50) NULL,
-	sub_contractor_id int4 NULL,
-	mr_id uuid NULL,
-	vehicle_asset_code varchar(50) NULL,
-	for_asset_code varchar(50) NULL,
-	issued_by varchar(50) NULL,
-	gate_verified_by varchar(255) NULL,
-	gate_verified_date timestamp NULL,
-	is_gate_verified bool DEFAULT false NOT NULL,
-	arrival_gate_verified_by varchar(255) NULL,
-	arrival_gate_verified_date timestamp NULL,
-	is_arrival_gate_verified bool DEFAULT false NOT NULL,
-	CONSTRAINT gin_gin_code_key UNIQUE (gin_code),
-	CONSTRAINT gin_pkey PRIMARY KEY (gin_id),
-	CONSTRAINT fk_gin_approved_by FOREIGN KEY (approved_by) REFERENCES employee(employee_code),
-	CONSTRAINT fk_gin_for_asset_code FOREIGN KEY (for_asset_code) REFERENCES asset_code(asset_code_code),
-	CONSTRAINT fk_gin_issued_by FOREIGN KEY (issued_by) REFERENCES employee(employee_code),
-	CONSTRAINT fk_gin_issued_project FOREIGN KEY (issued_project_code) REFERENCES project(project_code),
-	CONSTRAINT fk_gin_mr FOREIGN KEY (mr_id) REFERENCES mr(mr_id),
-	CONSTRAINT fk_gin_received_person FOREIGN KEY (received_by) REFERENCES employee(employee_code),
-	CONSTRAINT fk_gin_received_project FOREIGN KEY (received_project_code) REFERENCES project(project_code),
-	CONSTRAINT fk_gin_type FOREIGN KEY (gin_type_id) REFERENCES gin_type(gin_type_id)
-);
-
-
--- public.grn definition
-
--- Drop table
-
--- DROP TABLE grn;
-
-CREATE TABLE grn (
-	grn_id uuid NOT NULL,
-	grn_code varchar(50) NOT NULL,
-	from_project_code varchar(50) NULL,
-	is_supplier_grn bool DEFAULT false NOT NULL,
-	supplier_code varchar(50) NULL,
-	invoice_date date NULL,
-	to_project_code varchar(50) NULL,
-	checked_date timestamp NULL,
-	checked_by varchar(50) NULL,
-	approved_date timestamp NULL,
-	approved_by varchar(50) NULL,
-	grn_date date NULL,
-	po_number int4 NULL,
-	is_approved bool DEFAULT false NOT NULL,
-	gin_id uuid NULL,
-	po_code varchar(40) NULL,
-	stock_return_id uuid NULL,
-	vehicle_asset_code varchar(50) NULL,
-	vehicle_no varchar(50) NULL,
-	gate_verified_by varchar(255) NULL,
-	gate_verified_date timestamp NULL,
-	is_gate_verified bool DEFAULT false NOT NULL,
-	invoice_number varchar(100) NULL,
-	delivery_note_number varchar(100) NULL,
-	CONSTRAINT grn_grn_code_key UNIQUE (grn_code),
-	CONSTRAINT grn_pkey PRIMARY KEY (grn_id),
-	CONSTRAINT fk_grn_approved_by FOREIGN KEY (approved_by) REFERENCES employee(employee_code),
-	CONSTRAINT fk_grn_checked_by FOREIGN KEY (checked_by) REFERENCES employee(employee_code),
-	CONSTRAINT fk_grn_from_project FOREIGN KEY (from_project_code) REFERENCES project(project_code),
-	CONSTRAINT fk_grn_gin FOREIGN KEY (gin_id) REFERENCES gin(gin_id),
-	CONSTRAINT fk_grn_supplier FOREIGN KEY (supplier_code) REFERENCES supplier(suppliercode),
-	CONSTRAINT fk_grn_to_project FOREIGN KEY (to_project_code) REFERENCES project(project_code)
-);
-CREATE INDEX idx_grn_po_code ON public.grn USING btree (po_code);
-CREATE INDEX idx_grn_stock_return_id ON public.grn USING btree (stock_return_id);
-
-
 -- public.item_code definition
 
 -- Drop table
@@ -1373,11 +1496,6 @@ CREATE TABLE item_code (
 	CONSTRAINT fk_item_code_sub_sub_category FOREIGN KEY (item_subsubcategory_id) REFERENCES item_subsubcategory(item_subsubcategory_id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
--- asset_code.item_code_id -> item_code.item_code_id: added here (not on asset_code's own
--- CREATE TABLE) because item_code is defined later in this file.
-ALTER TABLE asset_code
-	ADD CONSTRAINT fk_asset_code_item_code FOREIGN KEY (item_code_id) REFERENCES item_code(item_code_id);
-
 
 -- public.mr_item definition
 
@@ -1392,15 +1510,58 @@ CREATE TABLE mr_item (
 	description varchar(255) NULL,
 	"size" varchar(100) NULL,
 	uom_id int4 NOT NULL,
-	quantity int4 NOT NULL,
+	quantity numeric(18, 3) NOT NULL,
 	priority varchar(30) NULL,
 	required_date date NOT NULL,
-	CONSTRAINT chk_mr_item_quantity CHECK ((quantity > 0)),
+	line_status varchar(20) DEFAULT 'OPEN'::character varying NOT NULL,
+	closed_reason text NULL,
+	priority_rank int4 NULL,
+	CONSTRAINT chk_mr_item_line_status CHECK (((line_status)::text = ANY ((ARRAY['OPEN'::character varying, 'PARTLY_ISSUED'::character varying, 'CLOSED'::character varying, 'BACK_ORDERED'::character varying, 'FORWARDED'::character varying])::text[]))),
+	CONSTRAINT chk_mr_item_quantity CHECK ((quantity > (0)::numeric)),
 	CONSTRAINT mr_item_pkey PRIMARY KEY (mr_item_id),
 	CONSTRAINT fk_mr_item_item_code FOREIGN KEY (item_code_code) REFERENCES item_code(item_code_code),
 	CONSTRAINT fk_mr_item_mr FOREIGN KEY (mr_id) REFERENCES mr(mr_id) ON DELETE CASCADE,
 	CONSTRAINT fk_mr_item_uom FOREIGN KEY (uom_id) REFERENCES uom(uom_id)
 );
+CREATE INDEX idx_mr_item_item_code ON public.mr_item USING btree (item_code_code);
+CREATE INDEX idx_mr_item_line_status ON public.mr_item USING btree (line_status);
+
+
+-- public.mr_item_allocation definition
+
+-- Drop table
+
+-- DROP TABLE mr_item_allocation;
+
+CREATE TABLE mr_item_allocation (
+	allocation_id uuid DEFAULT gen_random_uuid() NOT NULL,
+	plan_batch_id uuid NOT NULL,
+	mr_id uuid NOT NULL,
+	mr_item_id uuid NOT NULL,
+	item_code varchar(50) NOT NULL,
+	source_project_code varchar(50) NOT NULL,
+	allocated_qty numeric(18, 3) NOT NULL,
+	status varchar(10) DEFAULT 'ACTIVE'::character varying NOT NULL,
+	gin_id uuid NULL,
+	created_by varchar(50) NOT NULL,
+	created_at timestamp DEFAULT now() NOT NULL,
+	released_by varchar(50) NULL,
+	released_at timestamp NULL,
+	release_reason text NULL,
+	plan_stage varchar(10) DEFAULT 'CONFIRMED'::character varying NOT NULL,
+	confirmed_by varchar(50) NULL,
+	confirmed_at timestamp NULL,
+	CONSTRAINT chk_mr_alloc_plan_stage CHECK (((plan_stage)::text = ANY ((ARRAY['RESERVED'::character varying, 'CONFIRMED'::character varying])::text[]))),
+	CONSTRAINT mr_item_allocation_allocated_qty_check CHECK ((allocated_qty > (0)::numeric)),
+	CONSTRAINT mr_item_allocation_pkey PRIMARY KEY (allocation_id),
+	CONSTRAINT mr_item_allocation_status_check CHECK (((status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'ISSUED'::character varying, 'RELEASED'::character varying])::text[]))),
+	CONSTRAINT mr_item_allocation_mr_id_fkey FOREIGN KEY (mr_id) REFERENCES mr(mr_id) ON DELETE CASCADE,
+	CONSTRAINT mr_item_allocation_mr_item_id_fkey FOREIGN KEY (mr_item_id) REFERENCES mr_item(mr_item_id) ON DELETE CASCADE
+);
+CREATE INDEX idx_mr_alloc_batch ON public.mr_item_allocation USING btree (plan_batch_id);
+CREATE INDEX idx_mr_alloc_gin ON public.mr_item_allocation USING btree (gin_id);
+CREATE INDEX idx_mr_alloc_mr_item ON public.mr_item_allocation USING btree (mr_item_id);
+CREATE INDEX idx_mr_alloc_store_item ON public.mr_item_allocation USING btree (source_project_code, item_code) WHERE ((status)::text = 'ACTIVE'::text);
 
 
 -- public.non_stock_item definition
@@ -1436,6 +1597,9 @@ CREATE TABLE plant_production_input (
 	uom_id int4 NOT NULL,
 	planned_quantity numeric(14, 3) NULL,
 	consumed_quantity numeric(14, 3) NOT NULL,
+	conversion_factor numeric(18, 6) NULL,
+	stock_equivalent_qty numeric(18, 6) NULL,
+	CONSTRAINT chk_plant_production_input_conversion_factor CHECK (((conversion_factor IS NULL) OR (conversion_factor > (0)::numeric))),
 	CONSTRAINT plant_production_input_pkey PRIMARY KEY (production_input_id),
 	CONSTRAINT plant_production_input_item_code_fkey FOREIGN KEY (item_code) REFERENCES item_code(item_code_code),
 	CONSTRAINT plant_production_input_production_id_fkey FOREIGN KEY (production_id) REFERENCES plant_production(production_id) ON DELETE CASCADE
@@ -1457,6 +1621,9 @@ CREATE TABLE plant_production_output (
 	planned_quantity numeric(14, 3) NULL,
 	produced_quantity numeric(14, 3) NOT NULL,
 	is_waste bool DEFAULT false NOT NULL,
+	conversion_factor numeric(18, 6) NULL,
+	stock_equivalent_qty numeric(18, 6) NULL,
+	CONSTRAINT chk_plant_production_output_conversion_factor CHECK (((conversion_factor IS NULL) OR (conversion_factor > (0)::numeric))),
 	CONSTRAINT plant_production_output_pkey PRIMARY KEY (production_output_id),
 	CONSTRAINT plant_production_output_item_code_fkey FOREIGN KEY (item_code) REFERENCES item_code(item_code_code),
 	CONSTRAINT plant_production_output_production_id_fkey FOREIGN KEY (production_id) REFERENCES plant_production(production_id) ON DELETE CASCADE
@@ -1476,6 +1643,9 @@ CREATE TABLE plant_recipe_input (
 	item_code varchar(50) NOT NULL,
 	quantity numeric(14, 3) NOT NULL,
 	uom_id int4 NOT NULL,
+	conversion_factor numeric(18, 6) NULL,
+	stock_equivalent_qty numeric(18, 6) NULL,
+	CONSTRAINT chk_plant_recipe_input_conversion_factor CHECK (((conversion_factor IS NULL) OR (conversion_factor > (0)::numeric))),
 	CONSTRAINT plant_recipe_input_pkey PRIMARY KEY (recipe_input_id),
 	CONSTRAINT plant_recipe_input_item_code_fkey FOREIGN KEY (item_code) REFERENCES item_code(item_code_code),
 	CONSTRAINT plant_recipe_input_recipe_id_fkey FOREIGN KEY (recipe_id) REFERENCES plant_recipe(recipe_id) ON DELETE CASCADE
@@ -1497,6 +1667,9 @@ CREATE TABLE plant_recipe_output (
 	uom_id int4 NOT NULL,
 	is_primary bool DEFAULT false NOT NULL,
 	is_waste bool DEFAULT false NULL,
+	conversion_factor numeric(18, 6) NULL,
+	stock_equivalent_qty numeric(18, 6) NULL,
+	CONSTRAINT chk_plant_recipe_output_conversion_factor CHECK (((conversion_factor IS NULL) OR (conversion_factor > (0)::numeric))),
 	CONSTRAINT plant_recipe_output_pkey PRIMARY KEY (recipe_output_id),
 	CONSTRAINT plant_recipe_output_item_code_fkey FOREIGN KEY (item_code) REFERENCES item_code(item_code_code),
 	CONSTRAINT plant_recipe_output_recipe_id_fkey FOREIGN KEY (recipe_id) REFERENCES plant_recipe(recipe_id) ON DELETE CASCADE
@@ -1541,8 +1714,8 @@ CREATE TABLE project_store (
 	last_received_date date NULL,
 	last_issued_date date NULL,
 	reorder_level numeric(12, 2) DEFAULT 0 NOT NULL,
-	reorder_quantity numeric(12, 2) DEFAULT 0 NOT NULL,
 	bin_location varchar(50) NULL,
+	reorder_quantity numeric(12, 2) DEFAULT 0 NOT NULL,
 	CONSTRAINT pk_project_store PRIMARY KEY (project_code, item_code),
 	CONSTRAINT fk_project_store_item_code FOREIGN KEY (item_code) REFERENCES item_code(item_code_code),
 	CONSTRAINT fk_project_store_project FOREIGN KEY (project_code) REFERENCES project(project_code)
@@ -1601,7 +1774,7 @@ CREATE TABLE stock_adjustment_item (
 	item_code varchar(50) NULL,
 	description varchar(255) NULL,
 	uom_id int4 NULL,
-	adjustment_quantity int4 NOT NULL,
+	adjustment_quantity numeric(18, 3) NOT NULL,
 	unit_price numeric(15, 2) NULL,
 	adjustment_value numeric(15, 2) NULL,
 	remarks varchar(255) NULL,
@@ -1635,10 +1808,12 @@ CREATE TABLE stock_batch (
 	length_value numeric(10, 3) NULL,
 	width_value numeric(10, 3) NULL,
 	piece_count int4 NULL,
+	description varchar(255) NULL,
+	expiry_date date NULL,
 	CONSTRAINT stock_batch_batch_code_key UNIQUE (batch_code),
 	CONSTRAINT stock_batch_piece_count_check CHECK (((piece_count IS NULL) OR (piece_count > 0))),
 	CONSTRAINT stock_batch_pkey PRIMARY KEY (stock_batch_id),
-	CONSTRAINT stock_batch_source_type_check CHECK (((source_type)::text = ANY ((ARRAY['SUPPLIER_GRN'::character varying, 'INTERNAL_GRN'::character varying, 'STOCK_RETURN'::character varying, 'STOCK_ADJUSTMENT'::character varying, 'INTRA_PROJECT_ISSUE_RETURN'::character varying, 'PLANT_PRODUCTION'::character varying, 'CUT_RETURN'::character varying])::text[]))),
+	CONSTRAINT stock_batch_source_type_check CHECK (((source_type)::text = ANY (ARRAY[('SUPPLIER_GRN'::character varying)::text, ('INTERNAL_GRN'::character varying)::text, ('STOCK_RETURN'::character varying)::text, ('STOCK_ADJUSTMENT'::character varying)::text, ('INTRA_PROJECT_ISSUE_RETURN'::character varying)::text, ('PLANT_PRODUCTION'::character varying)::text, ('CUT_RETURN'::character varying)::text]))),
 	CONSTRAINT stock_batch_width_requires_length_check CHECK (((width_value IS NULL) OR (length_value IS NOT NULL))),
 	CONSTRAINT stock_batch_item_code_fkey FOREIGN KEY (item_code) REFERENCES item_code(item_code_code)
 );
@@ -1679,108 +1854,20 @@ CREATE TABLE stock_batch_sequence (
 );
 
 
--- public.stock_return definition
+-- public.asset_code definition
 
 -- Drop table
 
--- DROP TABLE stock_return;
+-- DROP TABLE asset_code;
 
-CREATE TABLE stock_return (
-	stock_return_id uuid NOT NULL,
-	stock_return_code varchar(50) NOT NULL,
-	from_project_code varchar(50) NOT NULL,
-	to_project_code varchar(50) NULL,
-	gin_id uuid NULL,
-	reason varchar(255) NULL,
-	remark varchar(255) NULL,
-	return_date timestamp NULL,
-	return_by varchar(50) NULL,
-	approved_date timestamp NULL,
-	approved_by varchar(50) NULL,
-	is_approved bool DEFAULT false NOT NULL,
-	return_type varchar(20) DEFAULT 'INTERNAL'::character varying NOT NULL,
-	po_code varchar(40) NULL,
-	supplier_code varchar(40) NULL,
-	gate_verified_by varchar(255) NULL,
-	gate_verified_date timestamp NULL,
-	is_gate_verified bool DEFAULT false NOT NULL,
-	arrival_gate_verified_by varchar(255) NULL,
-	arrival_gate_verified_date timestamp NULL,
-	is_arrival_gate_verified bool DEFAULT false NOT NULL,
-	received_by varchar(50) NULL,
-	vehicle_asset_code varchar(50) NULL,
-	vehicle_no varchar(50) NULL,
-	for_asset_code varchar(50) NULL,
-	invoice_number varchar(100) NULL,
-	delivery_note_number varchar(100) NULL,
-	CONSTRAINT stock_return_pkey PRIMARY KEY (stock_return_id),
-	CONSTRAINT stock_return_return_type_check CHECK (((return_type)::text = ANY ((ARRAY['INTERNAL'::character varying, 'SUPPLIER'::character varying])::text[]))),
-	CONSTRAINT stock_return_stock_return_code_key UNIQUE (stock_return_code),
-	CONSTRAINT fk_stock_return_approved_by FOREIGN KEY (approved_by) REFERENCES employee(employee_code),
-	CONSTRAINT fk_stock_return_for_asset_code FOREIGN KEY (for_asset_code) REFERENCES asset_code(asset_code_code),
-	CONSTRAINT fk_stock_return_from_project FOREIGN KEY (from_project_code) REFERENCES project(project_code),
-	CONSTRAINT fk_stock_return_gin FOREIGN KEY (gin_id) REFERENCES gin(gin_id),
-	CONSTRAINT fk_stock_return_return_by FOREIGN KEY (return_by) REFERENCES employee(employee_code),
-	CONSTRAINT fk_stock_return_to_project FOREIGN KEY (to_project_code) REFERENCES project(project_code)
+CREATE TABLE asset_code (
+	asset_code_id serial4 NOT NULL,
+	asset_code_code varchar(100) NOT NULL,
+	item_code_id int4 NULL,
+	CONSTRAINT asset_code_asset_code_code_key UNIQUE (asset_code_code),
+	CONSTRAINT asset_code_pkey PRIMARY KEY (asset_code_id),
+	CONSTRAINT fk_asset_code_item_code FOREIGN KEY (item_code_id) REFERENCES item_code(item_code_id)
 );
-CREATE INDEX idx_stock_return_po_code ON public.stock_return USING btree (po_code);
-
-
--- public.stock_return_item definition
-
--- Drop table
-
--- DROP TABLE stock_return_item;
-
-CREATE TABLE stock_return_item (
-	stock_return_item_id uuid NOT NULL,
-	stock_return_id uuid NOT NULL,
-	item_code varchar(50) NULL,
-	description varchar(255) NULL,
-	"size" varchar(100) NULL,
-	uom_id int4 NULL,
-	quantity int4 NOT NULL,
-	remarks varchar(255) NULL,
-	unit_price numeric(12, 2) NULL,
-	amount numeric(14, 2) NULL,
-	asset_code varchar(50) NULL,
-	CONSTRAINT stock_return_item_pkey PRIMARY KEY (stock_return_item_id),
-	CONSTRAINT fk_stock_return_item_item_code FOREIGN KEY (item_code) REFERENCES item_code(item_code_code),
-	CONSTRAINT fk_stock_return_item_return FOREIGN KEY (stock_return_id) REFERENCES stock_return(stock_return_id) ON DELETE CASCADE,
-	CONSTRAINT fk_stock_return_item_uom FOREIGN KEY (uom_id) REFERENCES uom(uom_id)
-);
-CREATE INDEX idx_stock_return_item_asset_code ON public.stock_return_item USING btree (asset_code) WHERE (asset_code IS NOT NULL);
-
-
-
--- public.asset_location definition
-
--- Drop table
-
--- DROP TABLE asset_location;
-
-CREATE TABLE asset_location (
-	asset_location_id uuid NOT NULL,
-	asset_code varchar(100) NOT NULL,
-	new_location varchar(100) NOT NULL,
-	changed_by varchar(100) NOT NULL,
-	changed_date date NOT NULL,
-	reason varchar(500) NULL,
-	created_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	updated_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	is_active bool DEFAULT true NULL,
-	assigned_employee varchar(100) NULL,
-	from_location varchar(150) NULL,
-	movement_type varchar(30) NULL,
-	source_doc_type varchar(40) NULL,
-	source_doc_id uuid NULL,
-	CONSTRAINT asset_location_pkey PRIMARY KEY (asset_location_id),
-	CONSTRAINT fk_asset_location_asset FOREIGN KEY (asset_code) REFERENCES asset_code(asset_code_code),
-	CONSTRAINT fk_asset_location_assigned_employee FOREIGN KEY (assigned_employee) REFERENCES employee(employee_code),
-	CONSTRAINT fk_asset_location_employee FOREIGN KEY (changed_by) REFERENCES employee(employee_code),
-	CONSTRAINT fk_asset_location_project FOREIGN KEY (new_location) REFERENCES project(project_code)
-);
-CREATE INDEX idx_asset_location_source_doc ON public.asset_location USING btree (source_doc_type, source_doc_id);
 
 
 -- public.consumable_item definition
@@ -1839,6 +1926,52 @@ CREATE TABLE fuel_issue (
 );
 
 
+-- public.gin definition
+
+-- Drop table
+
+-- DROP TABLE gin;
+
+CREATE TABLE gin (
+	gin_id uuid NOT NULL,
+	gin_code varchar(50) NOT NULL,
+	gin_type_id int4 NOT NULL,
+	issued_date timestamp NULL,
+	issued_project_code varchar(50) NULL,
+	received_project_code varchar(50) NULL,
+	received_by varchar(50) NULL,
+	vehicle_no varchar(50) NULL,
+	approved_by varchar(50) NULL,
+	approved_date timestamp NULL,
+	is_authorized bool DEFAULT false NOT NULL,
+	expected_return_date date NULL,
+	receiver_name varchar(255) NULL,
+	receiver_nic varchar(50) NULL,
+	sub_contractor_id int4 NULL,
+	mr_id uuid NULL,
+	vehicle_asset_code varchar(50) NULL,
+	gate_verified_by varchar(255) NULL,
+	gate_verified_date timestamp NULL,
+	is_gate_verified bool DEFAULT false NOT NULL,
+	arrival_gate_verified_by varchar(255) NULL,
+	arrival_gate_verified_date timestamp NULL,
+	is_arrival_gate_verified bool DEFAULT false NOT NULL,
+	for_asset_code varchar(50) NULL,
+	issued_by varchar(50) NULL,
+	CONSTRAINT gin_gin_code_key UNIQUE (gin_code),
+	CONSTRAINT gin_pkey PRIMARY KEY (gin_id),
+	CONSTRAINT fk_gin_approved_by FOREIGN KEY (approved_by) REFERENCES employee(employee_code),
+	CONSTRAINT fk_gin_for_asset_code FOREIGN KEY (for_asset_code) REFERENCES asset_code(asset_code_code),
+	CONSTRAINT fk_gin_issued_by FOREIGN KEY (issued_by) REFERENCES employee(employee_code),
+	CONSTRAINT fk_gin_issued_project FOREIGN KEY (issued_project_code) REFERENCES project(project_code),
+	CONSTRAINT fk_gin_mr FOREIGN KEY (mr_id) REFERENCES mr(mr_id),
+	CONSTRAINT fk_gin_received_person FOREIGN KEY (received_by) REFERENCES employee(employee_code),
+	CONSTRAINT fk_gin_received_project FOREIGN KEY (received_project_code) REFERENCES project(project_code),
+	CONSTRAINT fk_gin_type FOREIGN KEY (gin_type_id) REFERENCES gin_type(gin_type_id)
+);
+CREATE INDEX idx_gin_mr_id ON public.gin USING btree (mr_id);
+
+
 -- public.gin_item definition
 
 -- Drop table
@@ -1852,7 +1985,7 @@ CREATE TABLE gin_item (
 	description varchar(255) NULL,
 	"size" varchar(100) NULL,
 	uom_id int4 NULL,
-	quantity int4 NULL,
+	quantity numeric(18, 3) NULL,
 	remarks varchar(255) NULL,
 	issue_item_type_id int4 NULL,
 	unit_price numeric(12, 2) NULL,
@@ -1860,14 +1993,62 @@ CREATE TABLE gin_item (
 	length_m numeric(10, 3) NULL,
 	width_m numeric(10, 3) NULL,
 	asset_code varchar(50) NULL,
+	mr_item_id uuid NULL,
 	CONSTRAINT gin_item_pkey PRIMARY KEY (gin_item_id),
 	CONSTRAINT fk_gin_item_asset_code FOREIGN KEY (asset_code) REFERENCES asset_code(asset_code_code),
 	CONSTRAINT fk_gin_item_gin FOREIGN KEY (gin_id) REFERENCES gin(gin_id) ON DELETE CASCADE,
 	CONSTRAINT fk_gin_item_issue_item_type FOREIGN KEY (issue_item_type_id) REFERENCES issue_item_type(issue_item_type_id),
 	CONSTRAINT fk_gin_item_item_code FOREIGN KEY (item_code) REFERENCES item_code(item_code_code),
-	CONSTRAINT fk_gin_item_uom FOREIGN KEY (uom_id) REFERENCES uom(uom_id)
+	CONSTRAINT fk_gin_item_uom FOREIGN KEY (uom_id) REFERENCES uom(uom_id),
+	CONSTRAINT gin_item_mr_item_id_fkey FOREIGN KEY (mr_item_id) REFERENCES mr_item(mr_item_id) ON DELETE SET NULL
 );
 CREATE INDEX idx_gin_item_asset_code ON public.gin_item USING btree (asset_code) WHERE (asset_code IS NOT NULL);
+CREATE INDEX idx_gin_item_mr_item ON public.gin_item USING btree (mr_item_id);
+
+
+-- public.grn definition
+
+-- Drop table
+
+-- DROP TABLE grn;
+
+CREATE TABLE grn (
+	grn_id uuid NOT NULL,
+	grn_code varchar(50) NOT NULL,
+	from_project_code varchar(50) NULL,
+	is_supplier_grn bool DEFAULT false NOT NULL,
+	supplier_code varchar(50) NULL,
+	invoice_date date NULL,
+	to_project_code varchar(50) NULL,
+	checked_date timestamp NULL,
+	checked_by varchar(50) NULL,
+	approved_date timestamp NULL,
+	approved_by varchar(50) NULL,
+	grn_date date NULL,
+	po_number int4 NULL,
+	is_approved bool DEFAULT false NOT NULL,
+	gin_id uuid NULL,
+	po_code varchar(40) NULL,
+	stock_return_id uuid NULL,
+	vehicle_asset_code varchar(50) NULL,
+	vehicle_no varchar(50) NULL,
+	gate_verified_by varchar(255) NULL,
+	gate_verified_date timestamp NULL,
+	is_gate_verified bool DEFAULT false NOT NULL,
+	invoice_number varchar(100) NULL,
+	delivery_note_number varchar(100) NULL,
+	CONSTRAINT grn_grn_code_key UNIQUE (grn_code),
+	CONSTRAINT grn_pkey PRIMARY KEY (grn_id),
+	CONSTRAINT fk_grn_approved_by FOREIGN KEY (approved_by) REFERENCES employee(employee_code),
+	CONSTRAINT fk_grn_checked_by FOREIGN KEY (checked_by) REFERENCES employee(employee_code),
+	CONSTRAINT fk_grn_from_project FOREIGN KEY (from_project_code) REFERENCES project(project_code),
+	CONSTRAINT fk_grn_gin FOREIGN KEY (gin_id) REFERENCES gin(gin_id),
+	CONSTRAINT fk_grn_supplier FOREIGN KEY (supplier_code) REFERENCES supplier(suppliercode),
+	CONSTRAINT fk_grn_to_project FOREIGN KEY (to_project_code) REFERENCES project(project_code)
+);
+CREATE INDEX idx_grn_gin_id ON public.grn USING btree (gin_id);
+CREATE INDEX idx_grn_po_code ON public.grn USING btree (po_code);
+CREATE INDEX idx_grn_stock_return_id ON public.grn USING btree (stock_return_id);
 
 
 -- public.grn_item definition
@@ -1881,7 +2062,6 @@ CREATE TABLE grn_item (
 	grn_id uuid NOT NULL,
 	item_code varchar(50) NULL,
 	description varchar(255) NULL,
-	supplier_name varchar(255) NULL,
 	"size" varchar(100) NULL,
 	uom_id int4 NULL,
 	quantity numeric(18, 3) NOT NULL,
@@ -1892,6 +2072,7 @@ CREATE TABLE grn_item (
 	length_m numeric(10, 3) NULL,
 	width_m numeric(10, 3) NULL,
 	asset_code varchar(50) NULL,
+	supplier_name varchar(150) NULL,
 	expiry_date date NULL,
 	CONSTRAINT grn_items_pkey PRIMARY KEY (grn_item_id),
 	CONSTRAINT fk_grn_item_asset_code FOREIGN KEY (asset_code) REFERENCES asset_code(asset_code_code),
@@ -1948,6 +2129,38 @@ CREATE TABLE meter_reading (
 );
 
 
+-- public.mr_forward_plan definition
+
+-- Drop table
+
+-- DROP TABLE mr_forward_plan;
+
+CREATE TABLE mr_forward_plan (
+	forward_plan_id uuid DEFAULT gen_random_uuid() NOT NULL,
+	plan_batch_id uuid NOT NULL,
+	mr_id uuid NOT NULL,
+	mr_item_id uuid NOT NULL,
+	item_code varchar(50) NOT NULL,
+	shortfall_qty numeric(18, 3) NOT NULL,
+	"action" varchar(15) DEFAULT 'FORWARD'::character varying NOT NULL,
+	status varchar(10) DEFAULT 'PROPOSED'::character varying NOT NULL,
+	forwarded_mr_id uuid NULL,
+	created_by varchar(50) NOT NULL,
+	created_at timestamp DEFAULT now() NOT NULL,
+	agreed_by varchar(50) NULL,
+	agreed_at timestamp NULL,
+	CONSTRAINT mr_forward_plan_action_check CHECK (((action)::text = ANY ((ARRAY['FORWARD'::character varying, 'BACK_ORDER'::character varying])::text[]))),
+	CONSTRAINT mr_forward_plan_pkey PRIMARY KEY (forward_plan_id),
+	CONSTRAINT mr_forward_plan_shortfall_qty_check CHECK ((shortfall_qty > (0)::numeric)),
+	CONSTRAINT mr_forward_plan_status_check CHECK (((status)::text = ANY ((ARRAY['PROPOSED'::character varying, 'AGREED'::character varying, 'FORWARDED'::character varying, 'CANCELLED'::character varying])::text[]))),
+	CONSTRAINT mr_forward_plan_forwarded_mr_id_fkey FOREIGN KEY (forwarded_mr_id) REFERENCES mr(mr_id) ON DELETE SET NULL,
+	CONSTRAINT mr_forward_plan_mr_id_fkey FOREIGN KEY (mr_id) REFERENCES mr(mr_id) ON DELETE CASCADE,
+	CONSTRAINT mr_forward_plan_mr_item_id_fkey FOREIGN KEY (mr_item_id) REFERENCES mr_item(mr_item_id) ON DELETE CASCADE
+);
+CREATE INDEX idx_mr_forward_plan_mr_item ON public.mr_forward_plan USING btree (mr_item_id);
+CREATE INDEX idx_mr_forward_plan_status ON public.mr_forward_plan USING btree (status);
+
+
 -- public.quotation_item definition
 
 -- Drop table
@@ -1970,6 +2183,39 @@ CREATE TABLE quotation_item (
 CREATE INDEX idx_quotation_item_quotation ON public.quotation_item USING btree (quotation_id);
 
 
+-- public.received_service definition
+
+-- Drop table
+
+-- DROP TABLE received_service;
+
+CREATE TABLE received_service (
+	received_service_id uuid NOT NULL,
+	grn_id uuid NOT NULL,
+	grn_item_id uuid NOT NULL,
+	item_code varchar(50) NOT NULL,
+	description varchar(255) NULL,
+	quantity numeric(18, 3) NOT NULL,
+	uom_id int4 NULL,
+	unit_price int4 NULL,
+	amount numeric(18, 2) NULL,
+	project_code varchar(50) NOT NULL,
+	po_code varchar(40) NULL,
+	supplier_code varchar(50) NULL,
+	service_date date NOT NULL,
+	received_by varchar(50) NULL,
+	CONSTRAINT received_service_grn_item_id_key UNIQUE (grn_item_id),
+	CONSTRAINT received_service_pkey PRIMARY KEY (received_service_id),
+	CONSTRAINT received_service_grn_id_fkey FOREIGN KEY (grn_id) REFERENCES grn(grn_id) ON DELETE CASCADE,
+	CONSTRAINT received_service_grn_item_id_fkey FOREIGN KEY (grn_item_id) REFERENCES grn_item(grn_item_id) ON DELETE CASCADE,
+	CONSTRAINT received_service_item_code_fkey FOREIGN KEY (item_code) REFERENCES item_code(item_code_code),
+	CONSTRAINT received_service_uom_id_fkey FOREIGN KEY (uom_id) REFERENCES uom(uom_id)
+);
+CREATE INDEX idx_received_service_grn ON public.received_service USING btree (grn_id);
+CREATE INDEX idx_received_service_item ON public.received_service USING btree (item_code);
+CREATE INDEX idx_received_service_project ON public.received_service USING btree (project_code);
+
+
 -- public.service_request definition
 
 -- Drop table
@@ -1983,18 +2229,46 @@ CREATE TABLE service_request (
 	asset_code varchar(100) NOT NULL,
 	operator_name varchar(150) NULL,
 	phone_number varchar(30) NULL,
-	maintenance_works varchar(500) NULL,
+	maintenance_works text NULL,
 	is_approved bool DEFAULT false NOT NULL,
 	created_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	updated_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	service_request_code varchar(60) NULL,
 	submitted_by varchar(50) NULL,
+	request_type varchar(20) DEFAULT 'FAULTS'::character varying NOT NULL,
+	remarks text NULL,
 	CONSTRAINT service_request_pkey PRIMARY KEY (service_request_id),
+	CONSTRAINT service_request_type_check CHECK (((request_type)::text = ANY ((ARRAY['BREAKDOWN'::character varying, 'FAULTS'::character varying, 'ACCIDENT'::character varying])::text[]))),
 	CONSTRAINT fk_service_request_asset FOREIGN KEY (asset_code) REFERENCES asset_code(asset_code_code),
 	CONSTRAINT fk_service_request_project FOREIGN KEY (project_code) REFERENCES project(project_code),
 	CONSTRAINT service_request_submitted_by_fkey FOREIGN KEY (submitted_by) REFERENCES employee(employee_code)
 );
+CREATE INDEX idx_request_asset_approved ON public.service_request USING btree (asset_code, is_approved);
 CREATE UNIQUE INDEX uq_service_request_code ON public.service_request USING btree (service_request_code) WHERE (service_request_code IS NOT NULL);
+
+
+-- public.service_request_fault definition
+
+-- Drop table
+
+-- DROP TABLE service_request_fault;
+
+CREATE TABLE service_request_fault (
+	request_fault_id uuid DEFAULT gen_random_uuid() NOT NULL,
+	service_request_id uuid NOT NULL,
+	fault_code varchar(60) NULL,
+	description text NOT NULL,
+	review_required bool DEFAULT false NOT NULL,
+	reviewed_resolved bool DEFAULT false NOT NULL,
+	review_note text NULL,
+	reviewed_at timestamp NULL,
+	created_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	CONSTRAINT service_request_fault_pkey PRIMARY KEY (request_fault_id),
+	CONSTRAINT service_request_fault_service_request_id_description_key UNIQUE (service_request_id, description),
+	CONSTRAINT service_request_fault_fault_code_fkey FOREIGN KEY (fault_code) REFERENCES fault_type(fault_code),
+	CONSTRAINT service_request_fault_service_request_id_fkey FOREIGN KEY (service_request_id) REFERENCES service_request(service_request_id)
+);
+CREATE INDEX idx_request_fault_request ON public.service_request_fault USING btree (service_request_id);
 
 
 -- public.stock_action_allocation definition
@@ -2012,13 +2286,86 @@ CREATE TABLE stock_action_allocation (
 	item_code varchar(50) NOT NULL,
 	qty_taken numeric(14, 3) NOT NULL,
 	unit_cost numeric(14, 4) NOT NULL,
-	CONSTRAINT stock_action_allocation_action_type_check CHECK (((action_type)::text = ANY ((ARRAY['GIN'::character varying, 'INTRA_PROJECT_ISSUE'::character varying, 'STOCK_ADJUSTMENT'::character varying, 'STOCK_RETURN'::character varying, 'PLANT_PRODUCTION'::character varying, 'JOB_CARD_ISSUE'::character varying, 'FUEL_ISSUE'::character varying])::text[]))),
+	CONSTRAINT stock_action_allocation_action_type_check CHECK (((action_type)::text = ANY (ARRAY[('GIN'::character varying)::text, ('INTRA_PROJECT_ISSUE'::character varying)::text, ('STOCK_ADJUSTMENT'::character varying)::text, ('STOCK_RETURN'::character varying)::text, ('PLANT_PRODUCTION'::character varying)::text, ('JOB_CARD_ISSUE'::character varying)::text, ('FUEL_ISSUE'::character varying)::text]))),
 	CONSTRAINT stock_action_allocation_pkey PRIMARY KEY (stock_action_allocation_id),
 	CONSTRAINT stock_action_allocation_item_code_fkey FOREIGN KEY (item_code) REFERENCES item_code(item_code_code),
 	CONSTRAINT stock_action_allocation_stock_batch_id_fkey FOREIGN KEY (stock_batch_id) REFERENCES stock_batch(stock_batch_id) ON DELETE RESTRICT
 );
 CREATE INDEX idx_stock_action_allocation_action ON public.stock_action_allocation USING btree (action_type, action_id);
 CREATE INDEX idx_stock_action_allocation_batch ON public.stock_action_allocation USING btree (stock_batch_id);
+
+
+-- public.stock_return definition
+
+-- Drop table
+
+-- DROP TABLE stock_return;
+
+CREATE TABLE stock_return (
+	stock_return_id uuid NOT NULL,
+	stock_return_code varchar(50) NOT NULL,
+	from_project_code varchar(50) NOT NULL,
+	to_project_code varchar(50) NULL,
+	gin_id uuid NULL,
+	reason varchar(255) NULL,
+	remark varchar(255) NULL,
+	return_date timestamp NULL,
+	return_by varchar(50) NULL,
+	approved_date timestamp NULL,
+	approved_by varchar(50) NULL,
+	is_approved bool DEFAULT false NOT NULL,
+	return_type varchar(20) DEFAULT 'INTERNAL'::character varying NOT NULL,
+	po_code varchar(40) NULL,
+	supplier_code varchar(40) NULL,
+	gate_verified_by varchar(255) NULL,
+	gate_verified_date timestamp NULL,
+	is_gate_verified bool DEFAULT false NOT NULL,
+	arrival_gate_verified_by varchar(255) NULL,
+	arrival_gate_verified_date timestamp NULL,
+	is_arrival_gate_verified bool DEFAULT false NOT NULL,
+	received_by varchar(50) NULL,
+	vehicle_asset_code varchar(50) NULL,
+	vehicle_no varchar(50) NULL,
+	for_asset_code varchar(50) NULL,
+	invoice_number varchar(100) NULL,
+	delivery_note_number varchar(100) NULL,
+	CONSTRAINT stock_return_pkey PRIMARY KEY (stock_return_id),
+	CONSTRAINT stock_return_return_type_check CHECK (((return_type)::text = ANY (ARRAY[('INTERNAL'::character varying)::text, ('SUPPLIER'::character varying)::text]))),
+	CONSTRAINT stock_return_stock_return_code_key UNIQUE (stock_return_code),
+	CONSTRAINT fk_stock_return_approved_by FOREIGN KEY (approved_by) REFERENCES employee(employee_code),
+	CONSTRAINT fk_stock_return_for_asset_code FOREIGN KEY (for_asset_code) REFERENCES asset_code(asset_code_code),
+	CONSTRAINT fk_stock_return_from_project FOREIGN KEY (from_project_code) REFERENCES project(project_code),
+	CONSTRAINT fk_stock_return_gin FOREIGN KEY (gin_id) REFERENCES gin(gin_id),
+	CONSTRAINT fk_stock_return_return_by FOREIGN KEY (return_by) REFERENCES employee(employee_code),
+	CONSTRAINT fk_stock_return_to_project FOREIGN KEY (to_project_code) REFERENCES project(project_code)
+);
+CREATE INDEX idx_stock_return_po_code ON public.stock_return USING btree (po_code);
+
+
+-- public.stock_return_item definition
+
+-- Drop table
+
+-- DROP TABLE stock_return_item;
+
+CREATE TABLE stock_return_item (
+	stock_return_item_id uuid NOT NULL,
+	stock_return_id uuid NOT NULL,
+	item_code varchar(50) NULL,
+	description varchar(255) NULL,
+	"size" varchar(100) NULL,
+	uom_id int4 NULL,
+	quantity numeric(18, 3) NOT NULL,
+	remarks varchar(255) NULL,
+	unit_price numeric(12, 2) NULL,
+	amount numeric(14, 2) NULL,
+	asset_code varchar(50) NULL,
+	CONSTRAINT stock_return_item_pkey PRIMARY KEY (stock_return_item_id),
+	CONSTRAINT fk_stock_return_item_item_code FOREIGN KEY (item_code) REFERENCES item_code(item_code_code),
+	CONSTRAINT fk_stock_return_item_return FOREIGN KEY (stock_return_id) REFERENCES stock_return(stock_return_id) ON DELETE CASCADE,
+	CONSTRAINT fk_stock_return_item_uom FOREIGN KEY (uom_id) REFERENCES uom(uom_id)
+);
+CREATE INDEX idx_stock_return_item_asset_code ON public.stock_return_item USING btree (asset_code) WHERE (asset_code IS NOT NULL);
 
 
 -- public.asset definition
@@ -2061,6 +2408,31 @@ CREATE TABLE asset_document_remark (
 	CONSTRAINT asset_document_remark_pkey PRIMARY KEY (asset_code),
 	CONSTRAINT asset_document_remark_asset_code_fkey FOREIGN KEY (asset_code) REFERENCES asset(asset_code) ON DELETE CASCADE
 );
+
+
+-- public.asset_operator_history definition
+
+-- Drop table
+
+-- DROP TABLE asset_operator_history;
+
+CREATE TABLE asset_operator_history (
+	asset_operator_history_id uuid NOT NULL,
+	asset_code varchar(20) NOT NULL,
+	operator_employee_code varchar(50) NOT NULL,
+	changed_by varchar(50) NOT NULL,
+	changed_date timestamp DEFAULT now() NOT NULL,
+	remarks varchar(500) NULL,
+	is_active bool DEFAULT true NOT NULL,
+	created_at timestamp DEFAULT now() NOT NULL,
+	updated_at timestamp DEFAULT now() NOT NULL,
+	contact_number varchar(30) NULL,
+	CONSTRAINT asset_operator_history_pkey PRIMARY KEY (asset_operator_history_id),
+	CONSTRAINT asset_operator_history_asset_code_fkey FOREIGN KEY (asset_code) REFERENCES asset(asset_code) ON DELETE CASCADE,
+	CONSTRAINT asset_operator_history_changed_by_fkey FOREIGN KEY (changed_by) REFERENCES employee(employee_code),
+	CONSTRAINT asset_operator_history_operator_employee_code_fkey FOREIGN KEY (operator_employee_code) REFERENCES employee(employee_code)
+);
+CREATE INDEX idx_asset_operator_history_asset_code ON public.asset_operator_history USING btree (asset_code) WHERE (is_active = true);
 
 
 -- public.asset_pack_item definition
@@ -2317,6 +2689,7 @@ CREATE TABLE job_card (
 	CONSTRAINT job_card_parent_job_card_id_fkey FOREIGN KEY (parent_job_card_id) REFERENCES job_card(job_card_id) ON DELETE CASCADE,
 	CONSTRAINT job_card_service_request_id_fkey FOREIGN KEY (service_request_id) REFERENCES service_request(service_request_id)
 );
+CREATE INDEX idx_job_asset_open ON public.job_card USING btree (asset_code) WHERE ((NOT COALESCE(is_finished, false)) AND (NOT COALESCE(is_delivered, false)));
 CREATE INDEX idx_job_card_parent_job_card_id ON public.job_card USING btree (parent_job_card_id);
 CREATE INDEX idx_job_card_service_request_id ON public.job_card USING btree (service_request_id);
 
@@ -2804,8 +3177,28 @@ CREATE TABLE three_p_service (
 	asset_code varchar(50) NULL,
 	item_code varchar(50) NULL,
 	quantity numeric(12, 2) DEFAULT 1 NOT NULL,
+	po_code varchar(50) NULL,
 	CONSTRAINT three_p_service_pkey PRIMARY KEY (three_p_service_id),
 	CONSTRAINT fk_three_p_service_job_card FOREIGN KEY (job_card_id) REFERENCES job_card(job_card_id)
+);
+
+
+-- public.transport_vehicle definition
+
+-- Drop table
+
+-- DROP TABLE transport_vehicle;
+
+CREATE TABLE transport_vehicle (
+	asset_code varchar(50) NOT NULL,
+	default_driver varchar(150) NULL,
+	is_active bool DEFAULT true NOT NULL,
+	added_by varchar(50) NULL,
+	created_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	updated_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	CONSTRAINT transport_vehicle_pkey PRIMARY KEY (asset_code),
+	CONSTRAINT transport_vehicle_added_by_fkey FOREIGN KEY (added_by) REFERENCES employee(employee_code),
+	CONSTRAINT transport_vehicle_asset_code_fkey FOREIGN KEY (asset_code) REFERENCES asset(asset_code)
 );
 
 
@@ -2884,6 +3277,8 @@ CREATE TABLE vehicle_asset_detail (
 	purchase_invoice_document varchar(255) NULL,
 	warranty_document varchar(255) NULL,
 	other_supporting_documents varchar(255) NULL,
+	revenue_licence_start_date date NULL,
+	emission_test_start_date date NULL,
 	CONSTRAINT vehicle_asset_detail_pkey PRIMARY KEY (asset_code),
 	CONSTRAINT fk_vehicle_asset FOREIGN KEY (asset_code) REFERENCES asset(asset_code) ON DELETE CASCADE
 );
@@ -2902,9 +3297,16 @@ CREATE TABLE defect (
 	defect_id uuid DEFAULT gen_random_uuid() NOT NULL,
 	job_card_id uuid NOT NULL,
 	defect_description varchar(500) NOT NULL,
+	fault_code varchar(60) NULL,
+	outcome varchar(20) DEFAULT 'ASSIGNED'::character varying NOT NULL,
+	outcome_reason text NULL,
+	outcome_at timestamp NULL,
+	CONSTRAINT defect_fault_outcome_check CHECK (((outcome)::text = ANY ((ARRAY['ASSIGNED'::character varying, 'RESOLVED'::character varying, 'DEFERRED'::character varying])::text[]))),
 	CONSTRAINT defect_pkey PRIMARY KEY (defect_id),
+	CONSTRAINT defect_fault_code_fkey FOREIGN KEY (fault_code) REFERENCES fault_type(fault_code),
 	CONSTRAINT fk_defect_job_card FOREIGN KEY (job_card_id) REFERENCES job_card(job_card_id)
 );
+CREATE INDEX idx_defect_job ON public.defect USING btree (job_card_id);
 
 
 -- public.intra_project_issue definition
@@ -2937,10 +3339,10 @@ CREATE TABLE intra_project_issue (
 	job_card_id uuid NULL,
 	for_asset_code varchar(20) NULL,
 	CONSTRAINT intra_project_issue_code_key UNIQUE (intra_project_issue_code),
-	CONSTRAINT intra_project_issue_for_asset_code_fkey FOREIGN KEY (for_asset_code) REFERENCES asset(asset_code),
 	CONSTRAINT intra_project_issue_pkey PRIMARY KEY (intra_project_issue_id),
-	CONSTRAINT intra_project_issue_type_check CHECK (((issue_type)::text = ANY ((ARRAY['GENERAL'::character varying, 'SUBCONTRACTOR'::character varying, 'PERSONAL'::character varying, 'LOAN'::character varying, 'JOB_CARD'::character varying])::text[]))),
+	CONSTRAINT intra_project_issue_type_check CHECK (((issue_type)::text = ANY (ARRAY[('GENERAL'::character varying)::text, ('SUBCONTRACTOR'::character varying)::text, ('PERSONAL'::character varying)::text, ('LOAN'::character varying)::text, ('JOB_CARD'::character varying)::text]))),
 	CONSTRAINT intra_project_issue_approved_by_fkey FOREIGN KEY (approved_by) REFERENCES employee(employee_code),
+	CONSTRAINT intra_project_issue_for_asset_code_fkey FOREIGN KEY (for_asset_code) REFERENCES asset(asset_code),
 	CONSTRAINT intra_project_issue_gin_type_id_fkey FOREIGN KEY (gin_type_id) REFERENCES gin_type(gin_type_id),
 	CONSTRAINT intra_project_issue_issued_by_fkey FOREIGN KEY (issued_by) REFERENCES employee(employee_code),
 	CONSTRAINT intra_project_issue_issued_project_code_fkey FOREIGN KEY (issued_project_code) REFERENCES project(project_code),
@@ -3012,17 +3414,18 @@ CREATE TABLE intra_project_issue_return (
 	job_card_id uuid NULL,
 	from_asset_code varchar(20) NULL,
 	CONSTRAINT intra_project_issue_return_code_key UNIQUE (intra_project_issue_return_code),
-	CONSTRAINT intra_project_issue_return_from_asset_code_fkey FOREIGN KEY (from_asset_code) REFERENCES asset(asset_code),
 	CONSTRAINT intra_project_issue_return_pkey PRIMARY KEY (intra_project_issue_return_id),
-	CONSTRAINT intra_project_issue_return_type_check CHECK (((return_type)::text = ANY ((ARRAY['GENERAL'::character varying, 'SUBCONTRACTOR'::character varying, 'PERSONAL'::character varying, 'LOAN'::character varying, 'JOB_CARD'::character varying])::text[]))),
+	CONSTRAINT intra_project_issue_return_type_check CHECK (((return_type)::text = ANY (ARRAY[('GENERAL'::character varying)::text, ('SUBCONTRACTOR'::character varying)::text, ('PERSONAL'::character varying)::text, ('LOAN'::character varying)::text, ('JOB_CARD'::character varying)::text]))),
 	CONSTRAINT fk_intra_return_approved_by FOREIGN KEY (approved_by) REFERENCES employee(employee_code),
 	CONSTRAINT fk_intra_return_project FOREIGN KEY (issued_project_code) REFERENCES project(project_code),
 	CONSTRAINT fk_intra_return_returned_by FOREIGN KEY (returned_by) REFERENCES employee(employee_code),
 	CONSTRAINT intra_project_issue_return_employee_code_fkey FOREIGN KEY (employee_code) REFERENCES employee(employee_code),
+	CONSTRAINT intra_project_issue_return_from_asset_code_fkey FOREIGN KEY (from_asset_code) REFERENCES asset(asset_code),
 	CONSTRAINT intra_project_issue_return_intra_project_issue_id_fkey FOREIGN KEY (intra_project_issue_id) REFERENCES intra_project_issue(intra_project_issue_id),
 	CONSTRAINT intra_project_issue_return_job_card_id_fkey FOREIGN KEY (job_card_id) REFERENCES job_card(job_card_id),
 	CONSTRAINT intra_project_issue_return_subcontractor_id_fkey FOREIGN KEY (subcontractor_id) REFERENCES subcontractor(subcontractor_id)
 );
+CREATE INDEX idx_intra_project_issue_return_from_asset_code ON public.intra_project_issue_return USING btree (from_asset_code) WHERE (from_asset_code IS NOT NULL);
 CREATE INDEX idx_intra_project_issue_return_issue_id ON public.intra_project_issue_return USING btree (intra_project_issue_id);
 CREATE INDEX idx_intra_project_issue_return_issued_project_code ON public.intra_project_issue_return USING btree (issued_project_code);
 CREATE INDEX idx_intra_project_issue_return_job_card_id ON public.intra_project_issue_return USING btree (job_card_id);
@@ -3037,7 +3440,7 @@ CREATE INDEX idx_intra_project_issue_return_job_card_id ON public.intra_project_
 CREATE TABLE intra_project_issue_return_item (
 	intra_project_issue_return_item_id uuid NOT NULL,
 	intra_project_issue_return_id uuid NOT NULL,
-	intra_project_issue_item_id uuid NOT NULL,
+	intra_project_issue_item_id uuid NULL,
 	item_code varchar(60) NULL,
 	description varchar(250) NULL,
 	uom_id int4 NULL,
@@ -3056,6 +3459,25 @@ CREATE TABLE intra_project_issue_return_item (
 CREATE INDEX idx_intra_project_issue_return_item_asset_code ON public.intra_project_issue_return_item USING btree (asset_code) WHERE (asset_code IS NOT NULL);
 CREATE INDEX idx_intra_project_issue_return_item_issue_item_id ON public.intra_project_issue_return_item USING btree (intra_project_issue_item_id);
 CREATE INDEX idx_intra_project_issue_return_item_return_id ON public.intra_project_issue_return_item USING btree (intra_project_issue_return_id);
+
+
+-- public.job_defect_source definition
+
+-- Drop table
+
+-- DROP TABLE job_defect_source;
+
+CREATE TABLE job_defect_source (
+	defect_id uuid NOT NULL,
+	request_fault_id uuid NOT NULL,
+	assigned_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	released_at timestamp NULL,
+	CONSTRAINT job_defect_source_pkey PRIMARY KEY (defect_id, request_fault_id),
+	CONSTRAINT job_defect_source_defect_id_fkey FOREIGN KEY (defect_id) REFERENCES defect(defect_id),
+	CONSTRAINT job_defect_source_request_fault_id_fkey FOREIGN KEY (request_fault_id) REFERENCES service_request_fault(request_fault_id)
+);
+CREATE INDEX idx_fault_source_report ON public.job_defect_source USING btree (request_fault_id);
+CREATE UNIQUE INDEX uq_request_fault_claim ON public.job_defect_source USING btree (request_fault_id) WHERE (released_at IS NULL);
 
 
 -- public.stock_batch_split definition
@@ -3085,8 +3507,196 @@ CREATE TABLE stock_batch_split (
 CREATE INDEX idx_stock_batch_split_return ON public.stock_batch_split USING btree (intra_project_issue_return_id);
 CREATE INDEX idx_stock_batch_split_source_batch ON public.stock_batch_split USING btree (source_stock_batch_id);
 
--- These CREATE FUNCTION ... LANGUAGE c statements (pg_dump output of the pgcrypto
--- extension's internals) need superuser and fail with "permission denied for language c"
--- for a normal role. Installing the extension provides the same functions
--- (gen_random_uuid, pgp_sym_encrypt, digest, crypt, ...) without needing that privilege.
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- public.transport_trip definition
+
+-- Drop table
+
+-- DROP TABLE transport_trip;
+
+CREATE TABLE transport_trip (
+	trip_id uuid NOT NULL,
+	trip_code varchar(30) NOT NULL,
+	vehicle_asset_code varchar(50) NOT NULL,
+	driver_name varchar(150) NULL,
+	origin_project_code varchar(150) NOT NULL,
+	trip_type varchar(30) DEFAULT 'DIRECT'::character varying NOT NULL,
+	status varchar(20) DEFAULT 'PLANNED'::character varying NOT NULL,
+	planned_departure timestamp NULL,
+	actual_departure timestamp NULL,
+	remarks varchar(500) NULL,
+	created_by varchar(50) NULL,
+	closed_by varchar(50) NULL,
+	closed_at timestamp NULL,
+	created_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	updated_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	CONSTRAINT chk_transport_trip_status CHECK (((status)::text = ANY ((ARRAY['PLANNED'::character varying, 'IN_TRANSIT'::character varying, 'RETURNING'::character varying, 'COMPLETED'::character varying, 'CANCELLED'::character varying])::text[]))),
+	CONSTRAINT chk_transport_trip_type CHECK (((trip_type)::text = ANY ((ARRAY['DIRECT'::character varying, 'HUB_DISTRIBUTION'::character varying])::text[]))),
+	CONSTRAINT transport_trip_pkey PRIMARY KEY (trip_id),
+	CONSTRAINT transport_trip_trip_code_key UNIQUE (trip_code),
+	CONSTRAINT transport_trip_closed_by_fkey FOREIGN KEY (closed_by) REFERENCES employee(employee_code),
+	CONSTRAINT transport_trip_created_by_fkey FOREIGN KEY (created_by) REFERENCES employee(employee_code),
+	CONSTRAINT transport_trip_origin_project_code_fkey FOREIGN KEY (origin_project_code) REFERENCES project(project_code),
+	CONSTRAINT transport_trip_vehicle_asset_code_fkey FOREIGN KEY (vehicle_asset_code) REFERENCES transport_vehicle(asset_code)
+);
+CREATE INDEX idx_transport_trip_status ON public.transport_trip USING btree (status);
+CREATE UNIQUE INDEX uq_transport_trip_open_vehicle ON public.transport_trip USING btree (vehicle_asset_code) WHERE ((status)::text = ANY ((ARRAY['PLANNED'::character varying, 'IN_TRANSIT'::character varying, 'RETURNING'::character varying])::text[]));
+
+
+-- public.transport_trip_stop definition
+
+-- Drop table
+
+-- DROP TABLE transport_trip_stop;
+
+CREATE TABLE transport_trip_stop (
+	stop_id uuid NOT NULL,
+	trip_id uuid NOT NULL,
+	seq int4 NOT NULL,
+	project_code varchar(150) NOT NULL,
+	stop_type varchar(20) NOT NULL,
+	status varchar(20) DEFAULT 'PENDING'::character varying NOT NULL,
+	eta timestamp NULL,
+	arrived_at timestamp NULL,
+	departed_at timestamp NULL,
+	CONSTRAINT chk_transport_trip_stop_status CHECK (((status)::text = ANY ((ARRAY['PENDING'::character varying, 'ARRIVED'::character varying, 'DONE'::character varying, 'SKIPPED'::character varying])::text[]))),
+	CONSTRAINT chk_transport_trip_stop_type CHECK (((stop_type)::text = ANY ((ARRAY['HUB'::character varying, 'SITE'::character varying, 'RETURN_TO_BASE'::character varying])::text[]))),
+	CONSTRAINT transport_trip_stop_pkey PRIMARY KEY (stop_id),
+	CONSTRAINT uq_transport_trip_stop_seq UNIQUE (trip_id, seq),
+	CONSTRAINT transport_trip_stop_project_code_fkey FOREIGN KEY (project_code) REFERENCES project(project_code),
+	CONSTRAINT transport_trip_stop_trip_id_fkey FOREIGN KEY (trip_id) REFERENCES transport_trip(trip_id) ON DELETE CASCADE
+);
+CREATE INDEX idx_transport_trip_stop_project ON public.transport_trip_stop USING btree (project_code);
+CREATE INDEX idx_transport_trip_stop_trip ON public.transport_trip_stop USING btree (trip_id);
+
+
+-- public.asset_location definition
+
+-- Drop table
+
+-- DROP TABLE asset_location;
+
+CREATE TABLE asset_location (
+	asset_location_id uuid NOT NULL,
+	asset_code varchar(100) NOT NULL,
+	new_location varchar(100) NOT NULL,
+	changed_by varchar(100) NOT NULL,
+	changed_date date NOT NULL,
+	reason varchar(500) NULL,
+	created_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	updated_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	is_active bool DEFAULT true NULL,
+	assigned_employee varchar(100) NULL,
+	from_location varchar(150) NULL,
+	movement_type varchar(30) NULL,
+	source_doc_type varchar(40) NULL,
+	source_doc_id uuid NULL,
+	trip_id uuid NULL,
+	CONSTRAINT asset_location_pkey PRIMARY KEY (asset_location_id),
+	CONSTRAINT asset_location_trip_id_fkey FOREIGN KEY (trip_id) REFERENCES transport_trip(trip_id) ON DELETE SET NULL,
+	CONSTRAINT fk_asset_location_asset FOREIGN KEY (asset_code) REFERENCES asset_code(asset_code_code),
+	CONSTRAINT fk_asset_location_assigned_employee FOREIGN KEY (assigned_employee) REFERENCES employee(employee_code),
+	CONSTRAINT fk_asset_location_employee FOREIGN KEY (changed_by) REFERENCES employee(employee_code),
+	CONSTRAINT fk_asset_location_project FOREIGN KEY (new_location) REFERENCES project(project_code)
+);
+CREATE INDEX idx_asset_location_source_doc ON public.asset_location USING btree (source_doc_type, source_doc_id);
+CREATE INDEX idx_asset_location_trip ON public.asset_location USING btree (trip_id) WHERE (trip_id IS NOT NULL);
+
+
+-- public.gin_custody_event definition
+
+-- Drop table
+
+-- DROP TABLE gin_custody_event;
+
+CREATE TABLE gin_custody_event (
+	event_id uuid NOT NULL,
+	gin_id uuid NOT NULL,
+	trip_id uuid NULL,
+	event_type varchar(30) NOT NULL,
+	location_project_code varchar(150) NULL,
+	performed_by varchar(50) NULL,
+	event_time timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	remarks varchar(500) NULL,
+	CONSTRAINT gin_custody_event_pkey PRIMARY KEY (event_id),
+	CONSTRAINT gin_custody_event_gin_id_fkey FOREIGN KEY (gin_id) REFERENCES gin(gin_id),
+	CONSTRAINT gin_custody_event_location_project_code_fkey FOREIGN KEY (location_project_code) REFERENCES project(project_code),
+	CONSTRAINT gin_custody_event_performed_by_fkey FOREIGN KEY (performed_by) REFERENCES employee(employee_code),
+	CONSTRAINT gin_custody_event_trip_id_fkey FOREIGN KEY (trip_id) REFERENCES transport_trip(trip_id) ON DELETE SET NULL
+);
+CREATE INDEX idx_gin_custody_event_gin ON public.gin_custody_event USING btree (gin_id, event_time);
+
+
+-- public.transport_trip_gin definition
+
+-- Drop table
+
+-- DROP TABLE transport_trip_gin;
+
+CREATE TABLE transport_trip_gin (
+	allocation_id uuid NOT NULL,
+	trip_id uuid NOT NULL,
+	gin_id uuid NOT NULL,
+	delivery_mode varchar(10) NOT NULL,
+	drop_stop_id uuid NULL,
+	custody_status varchar(20) DEFAULT 'ALLOCATED'::character varying NOT NULL,
+	is_active bool DEFAULT true NOT NULL,
+	previous_allocation_id uuid NULL,
+	returned_at_project varchar(150) NULL,
+	created_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	updated_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	CONSTRAINT chk_transport_trip_gin_delivery_mode CHECK (((delivery_mode)::text = ANY ((ARRAY['DIRECT'::character varying, 'VIA_HUB'::character varying])::text[]))),
+	CONSTRAINT transport_trip_gin_custody_status_check CHECK (((custody_status)::text = ANY ((ARRAY['ALLOCATED'::character varying, 'ON_VEHICLE'::character varying, 'AT_HUB'::character varying, 'COLLECTED'::character varying, 'AT_DESTINATION'::character varying, 'UNDELIVERED'::character varying, 'DELIVERED'::character varying, 'HANDED_OVER'::character varying, 'RETURNED_TO_STORE'::character varying, 'REMOVED'::character varying])::text[]))),
+	CONSTRAINT transport_trip_gin_pkey PRIMARY KEY (allocation_id),
+	CONSTRAINT transport_trip_gin_drop_stop_id_fkey FOREIGN KEY (drop_stop_id) REFERENCES transport_trip_stop(stop_id) ON DELETE SET NULL,
+	CONSTRAINT transport_trip_gin_gin_id_fkey FOREIGN KEY (gin_id) REFERENCES gin(gin_id),
+	CONSTRAINT transport_trip_gin_previous_allocation_id_fkey FOREIGN KEY (previous_allocation_id) REFERENCES transport_trip_gin(allocation_id),
+	CONSTRAINT transport_trip_gin_returned_at_project_fkey FOREIGN KEY (returned_at_project) REFERENCES project(project_code),
+	CONSTRAINT transport_trip_gin_trip_id_fkey FOREIGN KEY (trip_id) REFERENCES transport_trip(trip_id) ON DELETE CASCADE
+);
+CREATE INDEX idx_transport_trip_gin_gin ON public.transport_trip_gin USING btree (gin_id);
+CREATE INDEX idx_transport_trip_gin_trip ON public.transport_trip_gin USING btree (trip_id);
+CREATE UNIQUE INDEX uq_transport_trip_gin_active ON public.transport_trip_gin USING btree (gin_id) WHERE (is_active = true);
+
+
+-- public.v_in_transit source
+
+CREATE OR REPLACE VIEW v_in_transit
+AS SELECT g.issued_project_code,
+    g.received_project_code,
+    gi.item_code,
+    sum(gi.quantity) AS in_transit_qty,
+    min(g.issued_date) AS oldest_issued_date,
+    count(DISTINCT g.gin_id) AS gin_count
+   FROM gin g
+     JOIN gin_item gi ON gi.gin_id = g.gin_id
+  WHERE g.is_authorized = true AND NOT (EXISTS ( SELECT 1
+           FROM grn r
+          WHERE r.gin_id = g.gin_id))
+  GROUP BY g.issued_project_code, g.received_project_code, gi.item_code;
+
+
+-- public.v_mr_item_issued source
+
+CREATE OR REPLACE VIEW v_mr_item_issued
+AS SELECT mi.mr_item_id,
+    mi.mr_id,
+    mi.item_code_code AS item_code,
+    mi.quantity AS requested_qty,
+    COALESCE(sum(gi.quantity), 0::numeric) AS issued_qty
+   FROM mr_item mi
+     LEFT JOIN gin g ON g.mr_id = mi.mr_id AND g.is_authorized = true
+     LEFT JOIN gin_item gi ON gi.gin_id = g.gin_id AND gi.item_code::text = mi.item_code_code::text
+  GROUP BY mi.mr_item_id, mi.mr_id, mi.item_code_code, mi.quantity;
+
+
+-- public.v_store_reserved source
+
+CREATE OR REPLACE VIEW v_store_reserved
+AS SELECT source_project_code AS project_code,
+    item_code,
+    sum(allocated_qty) AS reserved_qty
+   FROM mr_item_allocation
+  WHERE status::text = 'ACTIVE'::text
+  GROUP BY source_project_code, item_code;
+

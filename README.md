@@ -32,27 +32,6 @@ or (if configured):
 ```
 http://localhost:8080/api-docs
 ```
-### Development Server 
-
-The latest development version of the backend is deployed to AWS EC2:
-
-#### Backend
-URL of the EC2 instance
-
-```
-http://ec2-3-7-70-139.ap-south-1.compute.amazonaws.com:8080/swagger-ui/index.html
-```
-
-#### Frontend
-URL of the S3 instance
-```
-http://amzn-s3-bucket-frontend-erp-rr.s3-website.ap-south-1.amazonaws.com/
-```
-
-URL of the CloudFront distribution
-```
-https://dbddhdoeu3hqu.cloudfront.net/
-```
 
 ### Features
 

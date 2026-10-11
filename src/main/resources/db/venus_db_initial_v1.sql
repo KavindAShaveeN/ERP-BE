@@ -3672,6 +3672,7 @@ CREATE TABLE cash_account (
 	account_type varchar(20) NOT NULL,
 	is_active bool DEFAULT true NOT NULL,
 	created_at timestamp DEFAULT now() NOT NULL,
+	account_balance numeric(15, 2) DEFAULT 0.00 NOT NULL,
 	CONSTRAINT cash_account_pkey PRIMARY KEY (cash_account_id),
 	CONSTRAINT cash_account_account_type_check CHECK (((account_type)::text = ANY ((ARRAY['MAIN_CASH'::character varying, 'EMPLOYEE'::character varying])::text[]))),
 	CONSTRAINT chk_cash_account_owner CHECK (((((account_type)::text = 'EMPLOYEE'::text) AND (employee_code IS NOT NULL)) OR ((account_type)::text = 'MAIN_CASH'::text))),
@@ -3694,6 +3695,42 @@ CREATE TABLE cash_expense_category (
 	CONSTRAINT cash_expense_category_pkey PRIMARY KEY (category_id),
 	CONSTRAINT cash_expense_category_category_code_key UNIQUE (category_code)
 );
+
+
+-- public.cash_transaction definition
+
+-- Drop table
+
+-- DROP TABLE cash_transaction;
+
+CREATE TABLE cash_transaction (
+	transaction_id uuid DEFAULT gen_random_uuid() NOT NULL,
+	transaction_code varchar(40) NOT NULL,
+	transaction_type varchar(20) NOT NULL,
+	from_account_id uuid NULL,
+	to_account_id uuid NULL,
+	amount numeric(15, 2) NOT NULL,
+	category_id uuid NULL,
+	description text NULL,
+	reference_number varchar(100) NULL,
+	transaction_date timestamp DEFAULT now() NOT NULL,
+	status varchar(20) DEFAULT 'POSTED'::character varying NOT NULL,
+	created_by varchar(60) NOT NULL,
+	created_at timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT cash_transaction_pkey PRIMARY KEY (transaction_id),
+	CONSTRAINT cash_transaction_transaction_code_key UNIQUE (transaction_code),
+	CONSTRAINT cash_transaction_transaction_type_check CHECK (((transaction_type)::text = ANY ((ARRAY['TRANSFER'::character varying, 'EXPENSE'::character varying, 'RECEIPT'::character varying])::text[]))),
+	CONSTRAINT cash_transaction_amount_check CHECK ((amount > (0)::numeric)),
+	CONSTRAINT cash_transaction_status_check CHECK (((status)::text = ANY ((ARRAY['DRAFT'::character varying, 'POSTED'::character varying, 'VOID'::character varying])::text[]))),
+	CONSTRAINT chk_cash_transaction_accounts CHECK (((((transaction_type)::text = 'TRANSFER'::text) AND (from_account_id IS NOT NULL) AND (to_account_id IS NOT NULL) AND (from_account_id <> to_account_id)) OR (((transaction_type)::text = 'EXPENSE'::text) AND (from_account_id IS NOT NULL) AND (to_account_id IS NULL)) OR (((transaction_type)::text = 'RECEIPT'::text) AND (from_account_id IS NULL) AND (to_account_id IS NOT NULL)))),
+	CONSTRAINT chk_expense_category CHECK ((((transaction_type)::text <> 'EXPENSE'::text) OR (category_id IS NOT NULL))),
+	CONSTRAINT cash_transaction_from_account_id_fkey FOREIGN KEY (from_account_id) REFERENCES cash_account(cash_account_id),
+	CONSTRAINT cash_transaction_to_account_id_fkey FOREIGN KEY (to_account_id) REFERENCES cash_account(cash_account_id),
+	CONSTRAINT cash_transaction_category_id_fkey FOREIGN KEY (category_id) REFERENCES cash_expense_category(category_id),
+	CONSTRAINT cash_transaction_created_by_fkey FOREIGN KEY (created_by) REFERENCES employee(employee_code)
+);
+CREATE INDEX idx_cash_transaction_from ON public.cash_transaction USING btree (from_account_id);
+CREATE INDEX idx_cash_transaction_to ON public.cash_transaction USING btree (to_account_id);
 
 
 -- public.v_in_transit source

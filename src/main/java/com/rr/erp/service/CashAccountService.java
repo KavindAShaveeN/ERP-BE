@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -71,6 +72,10 @@ public class CashAccountService {
             account.setIsActive(true);
         }
 
+        if (account.getAccountBalance() == null) {
+            account.setAccountBalance(BigDecimal.ZERO);
+        }
+
         UUID id = repository.createCashAccount(account);
 
         return getCashAccountById(id);
@@ -92,6 +97,10 @@ public class CashAccountService {
 
         if (account.getIsActive() == null) {
             account.setIsActive(existing.getIsActive());
+        }
+
+        if (account.getAccountBalance() == null) {
+            account.setAccountBalance(existing.getAccountBalance());
         }
 
         repository.updateCashAccount(cashAccountId, account);

@@ -25,6 +25,7 @@ public class CashAccountRepository {
                 e.full_name AS employee_name,
                 ca.account_name,
                 ca.account_type,
+                ca.account_balance,
                 ca.is_active,
                 ca.created_at
             FROM cash_account ca
@@ -50,6 +51,9 @@ public class CashAccountRepository {
         );
         account.setAccountType(
                 rs.getString("account_type")
+        );
+        account.setAccountBalance(
+                rs.getBigDecimal("account_balance")
         );
         account.setIsActive(
                 rs.getBoolean("is_active")
@@ -128,9 +132,10 @@ public class CashAccountRepository {
                     employee_code,
                     account_name,
                     account_type,
+                    account_balance,
                     is_active
                 )
-                VALUES (?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?)
                 RETURNING cash_account_id
                 """;
 
@@ -140,6 +145,7 @@ public class CashAccountRepository {
                 account.getEmployeeCode(),
                 account.getAccountName(),
                 account.getAccountType(),
+                account.getAccountBalance(),
                 account.getIsActive()
         );
     }
@@ -159,6 +165,7 @@ public class CashAccountRepository {
                     employee_code = ?,
                     account_name = ?,
                     account_type = ?,
+                    account_balance = ?,
                     is_active = ?
                 WHERE cash_account_id = ?
                 """;
@@ -168,6 +175,7 @@ public class CashAccountRepository {
                 account.getEmployeeCode(),
                 account.getAccountName(),
                 account.getAccountType(),
+                account.getAccountBalance(),
                 account.getIsActive(),
                 cashAccountId
         );

@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -199,6 +200,28 @@ public class CashAccountRepository {
         return jdbcTemplate.update(
                 sql,
                 isActive,
+                cashAccountId
+        );
+    }
+
+
+    // =========================================================
+    // ADJUST BALANCE (posting / voiding cash transactions)
+    // =========================================================
+
+    public int adjustBalance(
+            UUID cashAccountId,
+            BigDecimal delta) {
+
+        String sql = """
+                UPDATE cash_account
+                SET account_balance = account_balance + ?
+                WHERE cash_account_id = ?
+                """;
+
+        return jdbcTemplate.update(
+                sql,
+                delta,
                 cashAccountId
         );
     }

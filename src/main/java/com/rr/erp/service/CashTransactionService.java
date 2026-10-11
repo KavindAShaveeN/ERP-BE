@@ -1,5 +1,6 @@
 package com.rr.erp.service;
 
+import com.rr.erp.entity.CashAccount;
 import com.rr.erp.entity.CashAccountBalance;
 import com.rr.erp.entity.CashTransaction;
 import com.rr.erp.repository.CashAccountRepository;
@@ -149,6 +150,10 @@ public class CashTransactionService {
 
         UUID id = repository.createTransaction(transaction);
 
+        if (CashTransaction.STATUS_POSTED.equals(status)) {
+            applyToBalances(transaction, false);
+        }
+
         return getTransactionById(id);
     }
 
@@ -198,6 +203,8 @@ public class CashTransactionService {
                 "Only DRAFT transactions can be posted"
         );
 
+        applyToBalances(existing, false);
+
         return getTransactionById(transactionId);
     }
 
@@ -236,6 +243,10 @@ public class CashTransactionService {
                 "Cash transaction status changed, please reload and try again"
         );
 
+        if (CashTransaction.STATUS_POSTED.equals(currentStatus)) {
+            applyToBalances(existing, true);
+        }
+
         return getTransactionById(transactionId);
     }
 
@@ -246,22 +257,21 @@ public class CashTransactionService {
 
     public CashAccountBalance getAccountBalance(UUID cashAccountId) {
 
-        String accountName = cashAccountRepository.getCashAccountById(cashAccountId)
+        CashAccount account = cashAccountRepository.getCashAccountById(cashAccountId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Cash account not found with id: " + cashAccountId
-                ))
-                .getAccountName();
+                ));
 
         BigDecimal totalIn = repository.getTotalIn(cashAccountId);
         BigDecimal totalOut = repository.getTotalOut(cashAccountId);
 
         CashAccountBalance balance = new CashAccountBalance();
         balance.setCashAccountId(cashAccountId);
-        balance.setAccountName(accountName);
+        balance.setAccountName(account.getAccountName());
         balance.setTotalIn(totalIn);
         balance.setTotalOut(totalOut);
-        balance.setBalance(totalIn.subtract(totalOut));
+        balance.setBalance(balanceOf(account));
 
         return balance;
     }
@@ -375,10 +385,34 @@ public class CashTransactionService {
                         .orElseThrow(() -> badRequest("Cash account not found with id: " + accountId)));
     }
 
+    /** Current balance as stored on cash_account (callers lock the row first). */
     private BigDecimal getBalanceAmount(UUID cashAccountId) {
 
-        return repository.getTotalIn(cashAccountId)
-                .subtract(repository.getTotalOut(cashAccountId));
+        return cashAccountRepository.getCashAccountById(cashAccountId)
+                .map(CashTransactionService::balanceOf)
+                .orElse(BigDecimal.ZERO);
+    }
+
+    private static BigDecimal balanceOf(CashAccount account) {
+
+        return account.getAccountBalance() == null
+                ? BigDecimal.ZERO
+                : account.getAccountBalance();
+    }
+
+    /** Move the amount out of the from account and into the to account (or back, when reversing). */
+    private void applyToBalances(CashTransaction transaction, boolean reverse) {
+
+        BigDecimal amount = reverse
+                ? transaction.getAmount().negate()
+                : transaction.getAmount();
+
+        if (transaction.getFromAccountId() != null) {
+            cashAccountRepository.adjustBalance(transaction.getFromAccountId(), amount.negate());
+        }
+        if (transaction.getToAccountId() != null) {
+            cashAccountRepository.adjustBalance(transaction.getToAccountId(), amount);
+        }
     }
 
     private void changeStatus(

@@ -29,7 +29,7 @@ public class CashAccount {
     @NotBlank(message = "Account type is required")
     private String accountType;
 
-    // Defaults to 0 on create; kept as-is on update when omitted
+    // Current balance: set on create/PUT, moved by POSTED cash transactions
     @Digits(integer = 13, fraction = 2, message = "Account balance must have at most 13 digits and 2 decimal places")
     private BigDecimal accountBalance;
 

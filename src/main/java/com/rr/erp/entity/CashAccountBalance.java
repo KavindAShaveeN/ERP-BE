@@ -6,7 +6,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-/** Balance of a cash account computed from its POSTED transactions. */
+/** Current balance of a cash account, with its POSTED transaction totals. */
 @Getter
 @Setter
 public class CashAccountBalance {

@@ -48,6 +48,29 @@ public class FuelIssueController {
     }
 
 
+    // GET /api/fuel_issue/all — every project's issued fuel notes (head office).
+    @GetMapping("/all")
+    public ResponseEntity<List<FuelIssue>> getAllIssuedFuel() {
+
+        return ResponseEntity.ok(
+                service.getAllIssuedFuel()
+        );
+    }
+
+
+    // GET /api/fuel_issue/{fuelIssueId} — one fuel issue note by id, whichever project it belongs to
+    // (head office opens any project's note).
+    @GetMapping("/{fuelIssueId}")
+    public ResponseEntity<FuelIssue> getFuelIssue(
+            @PathVariable UUID fuelIssueId
+    ) {
+
+        return ResponseEntity.ok(
+                service.getFuelIssue(fuelIssueId)
+        );
+    }
+
+
     @PutMapping("/received/{fuelIssueId}")
     public ResponseEntity<String> receiveFuel(
             @PathVariable UUID fuelIssueId

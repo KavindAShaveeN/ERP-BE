@@ -78,6 +78,7 @@ public class StockReturnService {
 
             if (applyStock) {
                 recordVehicleDispatch(stockReturn, stockReturnId);
+                autoGatePass(stockReturn, stockReturnId);
             }
         }
 
@@ -140,6 +141,31 @@ public class StockReturnService {
         long totalElements = repository.countAllReturns();
 
         return new PagedResponse<>(returns, page, size, totalElements);
+    }
+
+    /**
+     * There is no separate gate-pass step: approving a return passes it through the gate in the same
+     * transaction — the exit check, and (for an internal return to another project) the arrival check,
+     * recorded as the approver.
+     */
+    private void autoGatePass(StockReturn stockReturn, UUID stockReturnId) {
+
+        String by = stockReturn.getApprovedBy();
+        if (by == null || by.isBlank()) {
+            return;
+        }
+
+        if (!Boolean.TRUE.equals(stockReturn.getIsGateVerified())) {
+            verifyStockReturnAtGate(stockReturnId, by);
+            stockReturn.setGateVerifiedBy(by);
+            stockReturn.setIsGateVerified(true);
+        }
+
+        if (stockReturn.getToProjectCode() != null && !Boolean.TRUE.equals(stockReturn.getIsArrivalGateVerified())) {
+            verifyStockReturnArrivalAtGate(stockReturnId, by);
+            stockReturn.setArrivalGateVerifiedBy(by);
+            stockReturn.setIsArrivalGateVerified(true);
+        }
     }
 
     // Outgoing gate-pass queue: approved returns this project hasn't seen leave the gate yet.
@@ -225,6 +251,7 @@ public class StockReturnService {
 
             if (applyStock) {
                 recordVehicleDispatch(stockReturn, stockReturnId);
+                autoGatePass(stockReturn, stockReturnId);
             }
         }
 

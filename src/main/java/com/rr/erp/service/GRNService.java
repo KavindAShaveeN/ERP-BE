@@ -90,6 +90,7 @@ public class GRNService {
         applyPoUomConversions(grn);
         calculateAmounts(grn);
         applyArrivalGateVerification(grn);
+        applyApprovalGatePass(grn);
 
         // Assigned up front (instead of inside grnRepository.insertGRN) so it's
         // available below as the batch source_id.
@@ -200,6 +201,7 @@ public class GRNService {
         validateGRN(grn);
         applyPoUomConversions(grn);
         calculateAmounts(grn);
+        applyApprovalGatePass(grn);
 
         try {
             int updatedRows = grnRepository.updateGRN(grnId, grn);
@@ -247,6 +249,26 @@ public class GRNService {
                     exception
             );
         }
+    }
+
+    /**
+     * There is no separate gate-pass step: approving a GRN also marks it gate-verified, recorded as the
+     * approver (unless the confirmation was already carried over from the source GIN / return).
+     */
+    private void applyApprovalGatePass(GRN grn) {
+
+        if (!Boolean.TRUE.equals(grn.getIsApproved()) || Boolean.TRUE.equals(grn.getIsGateVerified())) {
+            return;
+        }
+
+        String by = grn.getApprovedBy();
+        if (by == null || by.isBlank()) {
+            return;
+        }
+
+        grn.setGateVerifiedBy(by);
+        grn.setGateVerifiedDate(java.time.LocalDateTime.now());
+        grn.setIsGateVerified(true);
     }
 
     /**

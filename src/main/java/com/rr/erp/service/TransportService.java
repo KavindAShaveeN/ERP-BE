@@ -832,6 +832,20 @@ public class TransportService {
      * is taking it straight from there: the hold is released and the collection recorded, with the vehicle
      * the GRN names. If it is still on its way to the hub, the goods are not there to receive yet.
      */
+    /**
+     * True while a GIN routed via a hub is still on its way to that hub — it cannot be received at its
+     * destination yet (see {@link #prepareReceipt}), so the automatic gate pass at approval must not try to.
+     */
+    public boolean isOnWayToHub(UUID ginId) {
+        if (ginId == null) {
+            return false;
+        }
+        AllocationRow allocation = repository.findActiveAllocationByGin(ginId).orElse(null);
+        return allocation != null
+                && MODE_VIA_HUB.equals(allocation.deliveryMode())
+                && ("ALLOCATED".equals(allocation.custodyStatus()) || "ON_VEHICLE".equals(allocation.custodyStatus()));
+    }
+
     public void prepareReceipt(UUID ginId, String vehicleNote, String actorEmployeeCode, String how) {
 
         if (ginId == null) {

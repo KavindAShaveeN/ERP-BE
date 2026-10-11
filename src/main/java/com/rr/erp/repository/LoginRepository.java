@@ -89,7 +89,10 @@ public class LoginRepository {
     }
 
 
-    // Get projects assigned to employee
+    // Get projects the employee can work in: their assigned projects, or — when any assigned
+    // project is a Head Quarters project — every project, so head office can switch into a
+    // site and act there. Assigned projects are listed first (the first one becomes the
+    // active project at login).
     public List<AssignedProject> getAssignedProjects(String employeeCode) {
 
         String sql = """
@@ -98,13 +101,25 @@ public class LoginRepository {
                 p.projectName AS "projectName",
                 p.project_type_id AS "projectTypeId",
                 pt.project_type_name AS "projectTypeName"
-            FROM assigned_projects ap
-            LEFT JOIN project p
-                ON p.projectId = ap.project_id
+            FROM project p
             LEFT JOIN project_type pt
                 ON pt.project_type_id = p.project_type_id
-            WHERE ap.employee_code = ?
-            ORDER BY p.projectId
+            WHERE p.projectId IN (
+                    SELECT project_id FROM assigned_projects WHERE employee_code = ?
+                )
+               OR EXISTS (
+                    SELECT 1
+                    FROM assigned_projects ap2
+                    JOIN project p2 ON p2.projectId = ap2.project_id
+                    JOIN project_type pt2 ON pt2.project_type_id = p2.project_type_id
+                    WHERE ap2.employee_code = ?
+                      AND LOWER(TRIM(pt2.project_type_name)) = 'head quarters'
+                )
+            ORDER BY
+                CASE WHEN p.projectId IN (
+                    SELECT project_id FROM assigned_projects WHERE employee_code = ?
+                ) THEN 0 ELSE 1 END,
+                p.projectId
             """;
 
         return jdbcTemplate.query(
@@ -131,6 +146,8 @@ public class LoginRepository {
 
                     return project;
                 },
+                employeeCode,
+                employeeCode,
                 employeeCode
         );
     }

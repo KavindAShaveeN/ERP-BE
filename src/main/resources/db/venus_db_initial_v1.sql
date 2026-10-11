@@ -3659,6 +3659,43 @@ CREATE INDEX idx_transport_trip_gin_trip ON public.transport_trip_gin USING btre
 CREATE UNIQUE INDEX uq_transport_trip_gin_active ON public.transport_trip_gin USING btree (gin_id) WHERE (is_active = true);
 
 
+-- public.cash_account definition
+
+-- Drop table
+
+-- DROP TABLE cash_account;
+
+CREATE TABLE cash_account (
+	cash_account_id uuid DEFAULT gen_random_uuid() NOT NULL,
+	employee_code varchar(60) NULL,
+	account_name varchar(150) NOT NULL,
+	account_type varchar(20) NOT NULL,
+	is_active bool DEFAULT true NOT NULL,
+	created_at timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT cash_account_pkey PRIMARY KEY (cash_account_id),
+	CONSTRAINT cash_account_account_type_check CHECK (((account_type)::text = ANY ((ARRAY['MAIN_CASH'::character varying, 'EMPLOYEE'::character varying])::text[]))),
+	CONSTRAINT chk_cash_account_owner CHECK (((((account_type)::text = 'EMPLOYEE'::text) AND (employee_code IS NOT NULL)) OR ((account_type)::text = 'MAIN_CASH'::text))),
+	CONSTRAINT cash_account_employee_code_fkey FOREIGN KEY (employee_code) REFERENCES employee(employee_code)
+);
+CREATE INDEX idx_cash_account_employee ON public.cash_account USING btree (employee_code);
+
+
+-- public.cash_expense_category definition
+
+-- Drop table
+
+-- DROP TABLE cash_expense_category;
+
+CREATE TABLE cash_expense_category (
+	category_id uuid DEFAULT gen_random_uuid() NOT NULL,
+	category_code varchar(30) NOT NULL,
+	category_name varchar(100) NOT NULL,
+	is_active bool DEFAULT true NOT NULL,
+	CONSTRAINT cash_expense_category_pkey PRIMARY KEY (category_id),
+	CONSTRAINT cash_expense_category_category_code_key UNIQUE (category_code)
+);
+
+
 -- public.v_in_transit source
 
 CREATE OR REPLACE VIEW v_in_transit

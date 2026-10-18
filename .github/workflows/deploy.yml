@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_REGION: ap-south-1
       EB_APPLICATION_NAME: ${{ vars.EB_APPLICATION_NAME }}
       EB_ENVIRONMENT_NAME: ${{ vars.EB_ENVIRONMENT_NAME }}
       EB_DEPLOY_BUCKET: ${{ vars.EB_DEPLOY_BUCKET }}
@@ -67,7 +67,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Upload deployment bundle
         shell: bash

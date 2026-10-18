@@ -74,7 +74,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION_LABEL="build-${GITHUB_SHA}-${GITHUB_RUN_ID}"
+          VERSION_LABEL="build-${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           S3_KEY="releases/${VERSION_LABEL}.zip"
 
           aws s3 cp deployment.zip \

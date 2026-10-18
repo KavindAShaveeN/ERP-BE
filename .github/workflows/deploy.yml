@@ -1,32 +1,113 @@
-name: Deploy
+
+name: Spring Boot CI/CD to Elastic Beanstalk
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
-  id-token: write   # required to request the OIDC token AWS trusts
   contents: read
+  id-token: write
+
+concurrency:
+  group: rr-erp-trial-deployment
+  cancel-in-progress: false
 
 jobs:
-  show-oidc-claims:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      EB_APPLICATION_NAME: ${{ vars.EB_APPLICATION_NAME }}
+      EB_ENVIRONMENT_NAME: ${{ vars.EB_ENVIRONMENT_NAME }}
+      EB_DEPLOY_BUCKET: ${{ vars.EB_DEPLOY_BUCKET }}
+
     steps:
-      - name: Show GitHub context values
-        run: |
-          echo "Owner (account/org): ${{ github.repository_owner }}"
-          echo "Repository:          ${{ github.repository }}"
-          echo "Ref:                 ${{ github.ref }}"
-          echo "Event:               ${{ github.event_name }}"
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
-      - name: Show OIDC token claims (copy 'sub' into the IAM trust policy)
-        run: |
-          TOKEN=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r '.value')
-          echo "::add-mask::$TOKEN"
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
 
-          # Decode the JWT payload (base64url, unpadded); print claims only, never the token
-          PAYLOAD=$(echo "$TOKEN" | cut -d '.' -f2 | tr '_-' '/+')
-          while [ $(( ${#PAYLOAD} % 4 )) -ne 0 ]; do PAYLOAD="${PAYLOAD}="; done
-          echo "$PAYLOAD" | base64 -d | jq '{sub, aud, repository, repository_owner, ref, job_workflow_ref}'
+      - name: Build and test
+        run: mvn --batch-mode clean verify
+
+      - name: Prepare deployment bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          JAR_FILE=$(find target -maxdepth 1 \
+            -type f -name '*.jar' \
+            ! -name '*-sources.jar' \
+            ! -name '*-javadoc.jar' \
+            ! -name 'original-*' \
+            | head -n 1)
+
+          if [ -z "$JAR_FILE" ]; then
+            echo "Executable JAR not found"
+            exit 1
+          fi
+
+          mkdir -p deployment
+          cp "$JAR_FILE" deployment/application.jar
+          cp Procfile deployment/Procfile
+
+          cd deployment
+          zip -q -r ../deployment.zip application.jar Procfile
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Upload deployment bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION_LABEL="build-${GITHUB_SHA}-${GITHUB_RUN_ID}"
+          S3_KEY="releases/${VERSION_LABEL}.zip"
+
+          aws s3 cp deployment.zip \
+            "s3://${EB_DEPLOY_BUCKET}/${S3_KEY}"
+
+          echo "VERSION_LABEL=${VERSION_LABEL}" >> "$GITHUB_ENV"
+          echo "S3_KEY=${S3_KEY}" >> "$GITHUB_ENV"
+
+      - name: Register Elastic Beanstalk version
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name "$EB_APPLICATION_NAME" \
+            --version-label "$VERSION_LABEL" \
+            --source-bundle \
+              "S3Bucket=${EB_DEPLOY_BUCKET},S3Key=${S3_KEY}" \
+            --process
+
+      - name: Deploy to Elastic Beanstalk
+        run: |
+          aws elasticbeanstalk update-environment \
+            --application-name "$EB_APPLICATION_NAME" \
+            --environment-name "$EB_ENVIRONMENT_NAME" \
+            --version-label "$VERSION_LABEL"
+
+      - name: Wait for deployment to finish
+        run: |
+          aws elasticbeanstalk wait environment-updated \
+            --environment-name "$EB_ENVIRONMENT_NAME"
+
+      - name: Check deployment status
+        run: |
+          aws elasticbeanstalk describe-environments \
+            --application-name "$EB_APPLICATION_NAME" \
+            --environment-names "$EB_ENVIRONMENT_NAME" \
+            --query \
+              'Environments[0].[Status,Health,VersionLabel]' \
+            --output table

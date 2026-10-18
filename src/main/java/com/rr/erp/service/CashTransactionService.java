@@ -297,10 +297,30 @@ public class CashTransactionService {
                 if (transaction.getFromAccountId().equals(transaction.getToAccountId())) {
                     throw badRequest("From account and to account must be different for TRANSFER");
                 }
+                validatePurpose(transaction);
+                if (!CashTransaction.PURPOSE_INTERNAL.equals(transaction.getPurpose())) {
+                    throw badRequest("A transfer between accounts must have the type INTERNAL; "
+                            + "money paid to someone else is recorded without a to account");
+                }
             }
             case CashTransaction.TYPE_EXPENSE -> {
                 if (transaction.getFromAccountId() == null) {
                     throw badRequest("From account is required for EXPENSE");
+                }
+                // Money paid to someone outside the accounts (salary, purchasing, subcontractor, ...) has no
+                // destination account: it is an expense from the paying account, filed under the category
+                // named after its purpose.
+                if (normalize(transaction.getPurpose()) != null) {
+                    validatePurpose(transaction);
+                    if (CashTransaction.PURPOSE_INTERNAL.equals(transaction.getPurpose())) {
+                        throw badRequest("INTERNAL is for transfers between accounts; use TRANSFER");
+                    }
+                    if (transaction.getCategoryId() == null) {
+                        String categoryCode = transaction.getPurpose();
+                        transaction.setCategoryId(repository.getCategoryIdByCode(categoryCode)
+                                .orElseThrow(() -> badRequest("Expense category " + categoryCode
+                                        + " is missing. Run cash_transfer_purpose_v1.sql to create it.")));
+                    }
                 }
                 if (transaction.getCategoryId() == null) {
                     throw badRequest("Expense category is required for EXPENSE");
@@ -316,6 +336,14 @@ public class CashTransactionService {
             default -> throw invalidType(type);
         }
 
+        // Purpose, employee and salary kind only apply to transfers and salary paid to an employee
+        boolean isPurposeExpense = CashTransaction.TYPE_EXPENSE.equals(type) && transaction.getPurpose() != null;
+        if (!CashTransaction.TYPE_TRANSFER.equals(type) && !isPurposeExpense) {
+            transaction.setPurpose(null);
+            transaction.setEmployeeCode(null);
+            transaction.setSalaryKind(null);
+        }
+
         // Expense categories only apply to expenses
         if (!CashTransaction.TYPE_EXPENSE.equals(type)) {
             transaction.setCategoryId(null);
@@ -325,6 +353,43 @@ public class CashTransactionService {
         transaction.setReferenceNumber(blankToNull(transaction.getReferenceNumber()));
 
         validateReferences(transaction);
+    }
+
+    private static final Set<String> PURPOSES = Set.of(
+            "INTERNAL", "PURCHASING", "SALARY", "SUBCONTRACTOR", "TRANSPORT", "UTILITIES", "OTHER"
+    );
+
+    /** A transfer must say why: salary needs an employee and ADVANCE / FULL_SALARY, purchasing needs a remark. */
+    private void validatePurpose(CashTransaction transaction) {
+
+        String purpose = normalize(transaction.getPurpose());
+        if (purpose == null || !PURPOSES.contains(purpose)) {
+            throw badRequest("Transfer purpose is required. Allowed values: INTERNAL, PURCHASING, SALARY, SUBCONTRACTOR, TRANSPORT, UTILITIES, OTHER");
+        }
+        transaction.setPurpose(purpose);
+
+        if (CashTransaction.PURPOSE_SALARY.equals(purpose)) {
+            String employeeCode = blankToNull(transaction.getEmployeeCode());
+            if (employeeCode == null) {
+                throw badRequest("Employee is required for a SALARY transfer");
+            }
+            if (!repository.employeeExists(employeeCode)) {
+                throw badRequest("Employee not found with employee code: " + employeeCode);
+            }
+            String kind = normalize(transaction.getSalaryKind());
+            if (!CashTransaction.SALARY_ADVANCE.equals(kind) && !CashTransaction.SALARY_FULL.equals(kind)) {
+                throw badRequest("Salary kind must be ADVANCE or FULL_SALARY");
+            }
+            transaction.setEmployeeCode(employeeCode);
+            transaction.setSalaryKind(kind);
+        } else {
+            transaction.setEmployeeCode(null);
+            transaction.setSalaryKind(null);
+        }
+
+        if (CashTransaction.PURPOSE_PURCHASING.equals(purpose) && blankToNull(transaction.getDescription()) == null) {
+            throw badRequest("A remark explaining the purchase is required for a PURCHASING transfer");
+        }
     }
 
     private void validateReferences(CashTransaction transaction) {
@@ -364,6 +429,14 @@ public class CashTransactionService {
 
         UUID fromAccountId = transaction.getFromAccountId();
         if (fromAccountId == null) {
+            return;
+        }
+
+        // The main cash account is the company's own money: it can pay out any amount
+        boolean isMainCash = cashAccountRepository.getCashAccountById(fromAccountId)
+                .map(account -> CashAccount.TYPE_MAIN_CASH.equals(account.getAccountType()))
+                .orElse(false);
+        if (isMainCash) {
             return;
         }
 

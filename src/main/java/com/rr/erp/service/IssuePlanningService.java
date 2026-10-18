@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 public class IssuePlanningService {
 
     /** The Purchasing Department is represented in this system by the Head Quarters project. */
-    public static final String PURCHASING_PROJECT_CODE = "HQ-COLOMBO";
+    public static final String PURCHASING_PROJECT_CODE = "HO";
 
     private static final String ACTION_FORWARD = "FORWARD";
     private static final String ACTION_BACK_ORDER = "BACK_ORDER";
@@ -213,6 +213,11 @@ public class IssuePlanningService {
     }
 
     // ---------------------------------------------------------- forward plan
+
+    /** Next free FWD- code, computed from every MR (approved or not). */
+    public String nextForwardMrCode() {
+        return planningRepository.nextForwardMrCode();
+    }
 
     /**
      * Records the shortfall plan the user agreed. FORWARD rows become one FWD- MR per source MR

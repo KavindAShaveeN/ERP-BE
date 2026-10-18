@@ -33,6 +33,10 @@ public class CashTransactionRepository {
                 cec.category_code,
                 cec.category_name,
                 ct.description,
+                ct.purpose,
+                ct.employee_code,
+                pe.full_name AS employee_name,
+                ct.salary_kind,
                 ct.reference_number,
                 ct.transaction_date,
                 ct.status,
@@ -48,6 +52,8 @@ public class CashTransactionRepository {
                 ON ct.category_id = cec.category_id
             LEFT JOIN employee e
                 ON ct.created_by = e.employee_code
+            LEFT JOIN employee pe
+                ON ct.employee_code = pe.employee_code
             """;
 
     private static final RowMapper<CashTransaction> ROW_MAPPER = (rs, rowNum) -> {
@@ -90,6 +96,10 @@ public class CashTransactionRepository {
         transaction.setDescription(
                 rs.getString("description")
         );
+        transaction.setPurpose(rs.getString("purpose"));
+        transaction.setEmployeeCode(rs.getString("employee_code"));
+        transaction.setEmployeeName(rs.getString("employee_name"));
+        transaction.setSalaryKind(rs.getString("salary_kind"));
         transaction.setReferenceNumber(
                 rs.getString("reference_number")
         );
@@ -219,12 +229,15 @@ public class CashTransactionRepository {
                     amount,
                     category_id,
                     description,
+                    purpose,
+                    employee_code,
+                    salary_kind,
                     reference_number,
                     transaction_date,
                     status,
                     created_by
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, NOW()), ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, NOW()), ?, ?)
                 RETURNING transaction_id
                 """;
 
@@ -238,6 +251,9 @@ public class CashTransactionRepository {
                 transaction.getAmount(),
                 transaction.getCategoryId(),
                 transaction.getDescription(),
+                transaction.getPurpose(),
+                transaction.getEmployeeCode(),
+                transaction.getSalaryKind(),
                 transaction.getReferenceNumber(),
                 transaction.getTransactionDate(),
                 transaction.getStatus(),
@@ -263,6 +279,9 @@ public class CashTransactionRepository {
                     amount = ?,
                     category_id = ?,
                     description = ?,
+                    purpose = ?,
+                    employee_code = ?,
+                    salary_kind = ?,
                     reference_number = ?,
                     transaction_date = COALESCE(?, transaction_date)
                 WHERE transaction_id = ?
@@ -277,6 +296,9 @@ public class CashTransactionRepository {
                 transaction.getAmount(),
                 transaction.getCategoryId(),
                 transaction.getDescription(),
+                transaction.getPurpose(),
+                transaction.getEmployeeCode(),
+                transaction.getSalaryKind(),
                 transaction.getReferenceNumber(),
                 transaction.getTransactionDate(),
                 transactionId
@@ -405,6 +427,15 @@ public class CashTransactionRepository {
                 "SELECT is_active FROM cash_expense_category WHERE category_id = ?",
                 Boolean.class,
                 categoryId
+        ).stream().findFirst();
+    }
+
+    public Optional<UUID> getCategoryIdByCode(String categoryCode) {
+
+        return jdbcTemplate.queryForList(
+                "SELECT category_id FROM cash_expense_category WHERE category_code = ?",
+                UUID.class,
+                categoryCode
         ).stream().findFirst();
     }
 

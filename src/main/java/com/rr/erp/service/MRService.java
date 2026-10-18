@@ -15,6 +15,8 @@ import java.util.UUID;
 @Service
 public class MRService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MRService.class);
+
     private final MRRepository mrRepository;
     private final IssuePlanningService issuePlanningService;
 
@@ -26,10 +28,18 @@ public class MRService {
     @Transactional
     public MR createMaterialRequest(MR mr) {
 
+        // The client guesses FWD- codes from the approved list only, so it can repeat one
+        // that already exists; the server owns the sequence.
+        if (mr.getMrCode() != null && mr.getMrCode().matches("^FWD-[0-9]+$")) {
+            mr.setMrCode(issuePlanningService.nextForwardMrCode());
+        }
+
         try {
             return mrRepository.insertMR(mr);
 
         } catch (DataIntegrityViolationException exception) {
+
+            log.warn("Material request insert failed: {}", exception.getMostSpecificCause().getMessage());
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,

@@ -20,6 +20,12 @@ public class CashTransaction {
     public static final String TYPE_EXPENSE = "EXPENSE";
     public static final String TYPE_RECEIPT = "RECEIPT";
 
+    public static final String PURPOSE_PURCHASING = "PURCHASING";
+    public static final String PURPOSE_SALARY = "SALARY";
+    public static final String PURPOSE_INTERNAL = "INTERNAL";
+    public static final String SALARY_ADVANCE = "ADVANCE";
+    public static final String SALARY_FULL = "FULL_SALARY";
+
     public static final String STATUS_DRAFT = "DRAFT";
     public static final String STATUS_POSTED = "POSTED";
     public static final String STATUS_VOID = "VOID";
@@ -45,6 +51,11 @@ public class CashTransaction {
 
     private String description;
 
+    // TRANSFER only: why the money is given. SALARY also needs employeeCode and salaryKind (ADVANCE / FULL_SALARY).
+    private String purpose;
+    private String employeeCode;
+    private String salaryKind;
+
     @Size(max = 100, message = "Reference number must be at most 100 characters")
     private String referenceNumber;
 
@@ -65,4 +76,5 @@ public class CashTransaction {
     private String categoryCode;
     private String categoryName;
     private String createdByName;
+    private String employeeName;
 }

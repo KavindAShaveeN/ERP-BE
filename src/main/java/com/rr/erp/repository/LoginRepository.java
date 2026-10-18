@@ -164,6 +164,22 @@ public class LoginRepository {
     }
 
 
+    public boolean isCashManager(String employeeCode) {
+
+        try {
+            Boolean manager = jdbcTemplate.queryForObject(
+                    "SELECT is_cash_manager FROM employee WHERE employee_code = ?",
+                    Boolean.class,
+                    employeeCode
+            );
+            return Boolean.TRUE.equals(manager);
+        } catch (org.springframework.dao.DataAccessException e) {
+            // employee_cash_manager_v1.sql has not been run yet: sign in as an ordinary employee
+            return false;
+        }
+    }
+
+
     public String getEmployeeName(String employeeCode) {
         String sql = """
             SELECT full_name

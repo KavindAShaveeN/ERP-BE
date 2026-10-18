@@ -117,6 +117,22 @@ public class FuelIssueService {
     }
 
 
+    public List<FuelIssue> getAllIssuedFuel() {
+
+        return repository.getAllIssuedFuel();
+    }
+
+
+    public FuelIssue getFuelIssue(UUID fuelIssueId) {
+
+        return repository.findById(fuelIssueId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Fuel issue note not found: " + fuelIssueId
+                ));
+    }
+
+
     // RECEIVE
     // The moment the receiver confirms delivery — this is when fuel actually leaves the
     // project's stock, not when the issue note was written up.

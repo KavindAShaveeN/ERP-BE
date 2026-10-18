@@ -9,7 +9,7 @@ import java.util.Map;
 
 /** Return actionable validation reasons without exposing database exception details. */
 @RestControllerAdvice(assignableTypes = {FaultWorkflowController.class, JobCardController.class,
-        ServiceRequestController.class, DefectController.class})
+        ServiceRequestController.class, DefectController.class, LabourEntryController.class})
 public class ServiceWorkflowExceptionHandler {
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String,String>> validation(ResponseStatusException exception) {

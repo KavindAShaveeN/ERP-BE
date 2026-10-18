@@ -18,4 +18,6 @@ public class LoginResponse {
     // Id of this login's login_history row — send it back to POST /api/logout. Null only if the
     // history could not be written (the login itself still succeeds).
     private UUID sessionId;
+    // Cash managers can see every cash account; other employees only their own petty cash.
+    private boolean cashManager;
 }

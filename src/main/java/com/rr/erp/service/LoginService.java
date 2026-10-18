@@ -66,7 +66,8 @@ public class LoginService {
                         employeeCode,
                         employeeName,
                         assignedProjects,
-                        sessionId
+                        sessionId,
+                        loginRepository.isCashManager(employeeCode)
                 );
 
         return Optional.of(response);

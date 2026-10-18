@@ -104,6 +104,24 @@ public class FuelIssueRepository {
     }
 
 
+    /** Every project's issued fuel notes — what head office sees. */
+    public List<FuelIssue> getAllIssuedFuel() {
+
+        String sql = """
+                SELECT *
+                FROM fuel_issue
+                WHERE is_issued = TRUE
+                  AND is_active = TRUE
+                ORDER BY fuel_issue_date DESC
+                """;
+
+        return jdbcTemplate.query(
+                sql,
+                (rs, rowNum) -> mapFuelIssueSnakeCase(rs)
+        );
+    }
+
+
     public Optional<FuelIssue> findById(UUID fuelIssueId) {
 
         String sql = """

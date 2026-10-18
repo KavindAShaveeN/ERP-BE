@@ -143,6 +143,7 @@ public class GINService {
                 issuePlanningService.onGinAuthorized(gin, ginId);
                 // Approved: if everything on its transport trip is now cleared, the vehicle leaves.
                 transportService.onGinCleared(ginId, gin.getApprovedBy());
+                autoGatePass(gin, ginId);
             }
         }
 
@@ -215,6 +216,7 @@ public class GINService {
                 issuePlanningService.onGinAuthorized(gin, ginId);
                 // Approved: if everything on its transport trip is now cleared, the vehicle leaves.
                 transportService.onGinCleared(ginId, gin.getApprovedBy());
+                autoGatePass(gin, ginId);
             }
         }
 
@@ -314,6 +316,33 @@ public class GINService {
         });
 
         return existing;
+    }
+
+    /**
+     * There is no separate gate-pass step: approving a GIN passes it through the gate in the same
+     * transaction — the exit check, and (when it has a destination project) the arrival check too,
+     * recorded as the approver. A GIN still on its way to a hub gets the exit check only.
+     */
+    private void autoGatePass(GIN gin, UUID ginId) {
+
+        String by = gin.getApprovedBy();
+        if (by == null || by.isBlank()) {
+            return;
+        }
+
+        if (!Boolean.TRUE.equals(gin.getIsGateVerified())) {
+            verifyGinAtGate(ginId, by);
+            gin.setGateVerifiedBy(by);
+            gin.setIsGateVerified(true);
+        }
+
+        if (gin.getReceivedProjectCode() != null
+                && !Boolean.TRUE.equals(gin.getIsArrivalGateVerified())
+                && !transportService.isOnWayToHub(ginId)) {
+            verifyGinArrivalAtGate(ginId, by);
+            gin.setArrivalGateVerifiedBy(by);
+            gin.setIsArrivalGateVerified(true);
+        }
     }
 
     private void issueItems(GIN gin, UUID ginId) {

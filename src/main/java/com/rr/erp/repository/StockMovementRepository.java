@@ -166,7 +166,7 @@ public class StockMovementRepository {
     }
 
     public List<StockMovementResponse> getGrnHistory(String projectCode, String itemCode) {
-        // A supplier GRN's to_project_code is always the fixed HQ-COLOMBO routing destination
+        // A supplier GRN's to_project_code is always the fixed HO routing destination
         // (see useHqScope.ts on the frontend), NOT the project the goods are actually for —
         // that's from_project_code, the requesting/owning project. An internal-transfer GRN
         // (is_supplier_grn = false) has no such fixed destination, so its to_project_code IS

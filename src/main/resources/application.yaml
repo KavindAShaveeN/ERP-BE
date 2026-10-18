@@ -1,17 +1,29 @@
+server:
+  # Elastic Beanstalk's Java SE platform expects port 5000; override with SERVER_PORT
+  port: ${SERVER_PORT:5000}
+
 spring:
   application:
     name: erp
+  config:
+    # Local dev: load DB_URL etc. from a .env file in the project root, if present
+    import: optional:file:.env[.properties]
   servlet:
     multipart:
       max-file-size: 25MB
       max-request-size: 25MB
   datasource:
-    url: jdbc:postgresql://database-1.cn0u24eg21dc.ap-south-1.rds.amazonaws.com:5432/postgres
-    username: VenusAdmin
-    password: Venus7#$RR6754
+    # Set DB_URL, DB_USERNAME and DB_PASSWORD per environment (EB environment properties, or locally)
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-    ddl-auto: update
+      # Schema is managed by the SQL scripts in db/, never by Hibernate
+      ddl-auto: none
     show-sql: true
+    properties:
+      # Don't open a DB connection at startup just to read metadata; the dialect is set above
+      hibernate.boot.allow_jdbc_metadata_access: false

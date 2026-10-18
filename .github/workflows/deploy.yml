@@ -1,280 +1,114 @@
-name: RR ERP API CI/CD
+
+name: Spring Boot CI/CD to Elastic Beanstalk
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
   id-token: write
 
-env:
-  AWS_REGION: ap-south-1
-  ECR_REPOSITORY: rr-erp-api/dev
-  CONTAINER_NAME: rr-erp-api
-  APP_PORT: 8080
+concurrency:
+  group: rr-erp-trial-deployment
+  cancel-in-progress: false
 
 jobs:
-
-  # =========================================================
-  # CI - Test, Build and Push Docker Image
-  # =========================================================
-
-  build-and-push:
-    name: Build and Push to ECR
+  build-and-deploy:
     runs-on: ubuntu-latest
 
-    outputs:
-      image_uri: ${{ steps.image.outputs.image_uri }}
+    env:
+      AWS_REGION: ap-south-1
+      EB_APPLICATION_NAME: rr-erp-backend
+      EB_ENVIRONMENT_NAME: Rr-erp-backend-env
+      EB_DEPLOY_BUCKET: elasticbeanstalk-ap-south-1-483379346725
+      AWS_DEPLOY_ROLE_ARN: arn:aws:iam::483379346725:role/rr-erp-github-actions-deploy
 
     steps:
-
-      # -----------------------------------------------------
-      # Checkout
-      # -----------------------------------------------------
-
       - name: Checkout source code
-        uses: actions/checkout@v7
-
-
-      # -----------------------------------------------------
-      # Java
-      # -----------------------------------------------------
+        uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: '21'
           cache: maven
 
+      - name: Build and test
+        run: mvn --batch-mode clean verify
 
-      # -----------------------------------------------------
-      # Test
-      # -----------------------------------------------------
-
-      - name: Run tests
-        run: |
-          chmod +x mvnw
-          ./mvnw clean test
-
-
-      # -----------------------------------------------------
-      # AWS authentication using GitHub OIDC
-      # -----------------------------------------------------
-      - name: Show GitHub OIDC subject
+      - name: Prepare deployment bundle
         shell: bash
         run: |
-          TOKEN_RESPONSE=$(curl -sS \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
-          ID_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.value')
+          set -euo pipefail
 
-          python3 - "$ID_TOKEN" <<'PY'
-          import sys
-          import json
-          import base64
+          JAR_FILE=$(find target -maxdepth 1 \
+            -type f -name '*.jar' \
+            ! -name '*-sources.jar' \
+            ! -name '*-javadoc.jar' \
+            ! -name 'original-*' \
+            | head -n 1)
 
-          token = sys.argv[1]
+          if [ -z "$JAR_FILE" ]; then
+            echo "Executable JAR not found"
+            exit 1
+          fi
 
-          payload = token.split('.')[1]
-          payload += '=' * (-len(payload) % 4)
+          mkdir -p deployment
+          cp "$JAR_FILE" deployment/application.jar
+          cp Procfile deployment/Procfile
 
-          claims = json.loads(
-             base64.urlsafe_b64decode(payload).decode()
-          )
-          print("======================================")
-          print("OIDC audience:", claims.get("aud"))
-          print("OIDC subject :", claims.get("sub"))
-          print("Repository   :", claims.get("repository"))
-          print("Ref          :", claims.get("ref"))
-          print("======================================")
-          PY
+          cd deployment
+          zip -q -r ../deployment.zip application.jar Procfile
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-
-      # -----------------------------------------------------
-      # Login to ECR
-      # -----------------------------------------------------
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-
-      # -----------------------------------------------------
-      # Generate image URI
-      # -----------------------------------------------------
-
-      - name: Set image URI
-        id: image
+      - name: Upload deployment bundle
+        shell: bash
         run: |
-          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${GITHUB_SHA}"
+          set -euo pipefail
+          VERSION_LABEL="build-${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          S3_KEY="releases/${VERSION_LABEL}.zip"
 
-          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
-          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+          aws s3 cp deployment.zip \
+            "s3://${EB_DEPLOY_BUCKET}/${S3_KEY}"
 
+          echo "VERSION_LABEL=${VERSION_LABEL}" >> "$GITHUB_ENV"
+          echo "S3_KEY=${S3_KEY}" >> "$GITHUB_ENV"
 
-      # -----------------------------------------------------
-      # Docker build
-      # -----------------------------------------------------
-
-      - name: Build Docker image
+      - name: Register Elastic Beanstalk version
         run: |
-          docker build \
-            -t $IMAGE_URI \
-            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest \
-            .
+          aws elasticbeanstalk create-application-version \
+            --application-name "$EB_APPLICATION_NAME" \
+            --version-label "$VERSION_LABEL" \
+            --source-bundle \
+              "S3Bucket=${EB_DEPLOY_BUCKET},S3Key=${S3_KEY}" \
+            --process
 
-
-      # -----------------------------------------------------
-      # Docker push
-      # -----------------------------------------------------
-
-      - name: Push Docker image to ECR
+      - name: Deploy to Elastic Beanstalk
         run: |
-          docker push $IMAGE_URI
+          aws elasticbeanstalk update-environment \
+            --application-name "$EB_APPLICATION_NAME" \
+            --environment-name "$EB_ENVIRONMENT_NAME" \
+            --version-label "$VERSION_LABEL"
 
-          docker push \
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
-
-
-  # =========================================================
-  # CD - Deploy Image to EC2
-  # =========================================================
-
-  deploy:
-    name: Deploy to EC2
-    needs: build-and-push
-    runs-on: ubuntu-latest
-
-    steps:
-
-      # -----------------------------------------------------
-      # Configure SSH
-      # -----------------------------------------------------
-
-      - name: Configure SSH key
+      - name: Wait for deployment to finish
         run: |
-          mkdir -p ~/.ssh
+          aws elasticbeanstalk wait environment-updated \
+            --environment-name "$EB_ENVIRONMENT_NAME"
 
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2.pem
-
-          chmod 600 ~/.ssh/ec2.pem
-
-          ssh-keyscan -H "${{ secrets.EC2_HOST }}" \
-            >> ~/.ssh/known_hosts
-
-
-      # -----------------------------------------------------
-      # Deploy
-      # -----------------------------------------------------
-
-      - name: Deploy Docker container
-        env:
-          IMAGE_URI: ${{ needs.build-and-push.outputs.image_uri }}
+      - name: Check deployment status
         run: |
-
-          ssh \
-            -i ~/.ssh/ec2.pem \
-            ubuntu@${{ secrets.EC2_HOST }} \
-            "IMAGE_URI='$IMAGE_URI' \
-             AWS_REGION='${{ env.AWS_REGION }}' \
-             CONTAINER_NAME='${{ env.CONTAINER_NAME }}' \
-             APP_PORT='${{ env.APP_PORT }}' \
-             bash -s" << 'EOF'
-
-          set -e
-
-          echo "========================================"
-          echo "Starting RR ERP API deployment"
-          echo "========================================"
-
-
-          # -----------------------------------------------
-          # Determine ECR Registry
-          # -----------------------------------------------
-
-          ECR_REGISTRY=$(echo "$IMAGE_URI" | cut -d/ -f1)
-
-
-          # -----------------------------------------------
-          # Authenticate Docker with ECR
-          # -----------------------------------------------
-
-          echo "Logging into Amazon ECR..."
-
-          aws ecr get-login-password \
-            --region "$AWS_REGION" |
-          sudo docker login \
-            --username AWS \
-            --password-stdin "$ECR_REGISTRY"
-
-
-          # -----------------------------------------------
-          # Pull new Docker image
-          # -----------------------------------------------
-
-          echo "Pulling image: $IMAGE_URI"
-
-          sudo docker pull "$IMAGE_URI"
-
-
-          # -----------------------------------------------
-          # Stop existing container
-          # -----------------------------------------------
-
-          echo "Stopping existing container..."
-
-          sudo docker stop "$CONTAINER_NAME" || true
-
-
-          # -----------------------------------------------
-          # Remove existing container
-          # -----------------------------------------------
-
-          echo "Removing existing container..."
-
-          sudo docker rm "$CONTAINER_NAME" || true
-
-
-          # -----------------------------------------------
-          # Run new container
-          # -----------------------------------------------
-
-          echo "Starting new container..."
-
-          sudo docker run \
-            -d \
-            --name "$CONTAINER_NAME" \
-            --restart unless-stopped \
-            -p "$APP_PORT:8080" \
-            --env-file /opt/rr-erp/.env \
-            "$IMAGE_URI"
-
-
-          # -----------------------------------------------
-          # Show running containers
-          # -----------------------------------------------
-
-          sudo docker ps
-
-
-          # -----------------------------------------------
-          # Clean unused images
-          # -----------------------------------------------
-
-          sudo docker image prune -f
-
-
-          echo "========================================"
-          echo "Deployment completed successfully"
-          echo "========================================"
-
-          EOF
+          aws elasticbeanstalk describe-environments \
+            --application-name "$EB_APPLICATION_NAME" \
+            --environment-names "$EB_ENVIRONMENT_NAME" \
+            --query \
+              'Environments[0].[Status,Health,VersionLabel]' \
+            --output table

@@ -22,7 +22,7 @@ jobs:
     env:
       AWS_REGION: ap-south-1
       EB_APPLICATION_NAME: rr-erp-backend
-      EB_ENVIRONMENT_NAME: rr-erp-backend-env
+      EB_ENVIRONMENT_NAME: Rr-erp-backend-env
       EB_DEPLOY_BUCKET: elasticbeanstalk-ap-south-1-483379346725
       AWS_DEPLOY_ROLE_ARN: arn:aws:iam::483379346725:role/rr-erp-github-actions-deploy
 

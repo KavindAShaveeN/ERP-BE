@@ -21,9 +21,10 @@ jobs:
 
     env:
       AWS_REGION: ap-south-1
-      EB_APPLICATION_NAME: ${{ vars.EB_APPLICATION_NAME }}
-      EB_ENVIRONMENT_NAME: ${{ vars.EB_ENVIRONMENT_NAME }}
-      EB_DEPLOY_BUCKET: ${{ vars.EB_DEPLOY_BUCKET }}
+      EB_APPLICATION_NAME: rr-erp-backend
+      EB_ENVIRONMENT_NAME: rr-erp-backend-env
+      EB_DEPLOY_BUCKET: elasticbeanstalk-ap-south-1-483379346725
+      AWS_DEPLOY_ROLE_ARN: arn:aws:iam::483379346725:role/rr-erp-github-actions-deploy
 
     steps:
       - name: Checkout source code
@@ -66,7 +67,7 @@ jobs:
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Upload deployment bundle

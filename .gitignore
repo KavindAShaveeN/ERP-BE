@@ -28,5 +28,7 @@ replay_pid*
 target/
 
 
-### Local environment variables ###
+# Local environment files (secrets)
 .env
+.env.*
+!.env.example

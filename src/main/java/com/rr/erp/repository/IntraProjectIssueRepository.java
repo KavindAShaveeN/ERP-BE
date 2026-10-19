@@ -145,9 +145,10 @@ public class IntraProjectIssueRepository {
                     issue_item_type_id,
                     length_m,
                     width_m,
-                    asset_code
+                    asset_code,
+                    stock_batch_id
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         jdbcTemplate.update(
@@ -165,7 +166,8 @@ public class IntraProjectIssueRepository {
                 item.getIssueItemTypeId(),
                 item.getLengthM(),
                 item.getWidthM(),
-                item.getAssetCode()
+                item.getAssetCode(),
+                item.getStockBatchId()
         );
     }
 
@@ -196,7 +198,8 @@ public class IntraProjectIssueRepository {
                     issue_item_type_id,
                     length_m,
                     width_m,
-                    asset_code
+                    asset_code,
+                    stock_batch_id
                 FROM intra_project_issue_item
                 WHERE intra_project_issue_id = ?
                 """;
@@ -421,6 +424,7 @@ public class IntraProjectIssueRepository {
         item.setLengthM(rs.getBigDecimal("length_m"));
         item.setWidthM(rs.getBigDecimal("width_m"));
         item.setAssetCode(rs.getString("asset_code"));
+        item.setStockBatchId(rs.getObject("stock_batch_id", UUID.class));
 
         return item;
     }

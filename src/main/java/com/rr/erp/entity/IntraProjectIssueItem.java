@@ -35,7 +35,7 @@ public class IntraProjectIssueItem {
     private String assetCode;
 
     // Non-stock items only — the specific batch (see StockBatch#description) the user picked
-    // to issue from. Not persisted on intra_project_issue_item itself (recorded via
-    // stock_action_allocation); only used at issue time to route the draw.
+    // to issue from. Persisted in intra_project_issue_item.stock_batch_id (NULL for stock
+    // items) so authorization still draws from the picked batch.
     private UUID stockBatchId;
 }

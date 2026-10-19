@@ -29,9 +29,8 @@ public class GINItem implements PackCarrier {
 
     // Non-stock items only — the specific batch (see StockBatch#description) the user picked
     // to issue from, e.g. "NS-001 — office chair, blue" rather than "NS-001 — office chair,
-    // red". Not persisted on gin_item itself (which batch was drawn is already recorded via
-    // stock_action_allocation); only used at issue time to route the draw to that exact batch
-    // instead of a blind FIFO walk. Null for every other item type.
+    // red". Persisted in gin_item.stock_batch_id (NULL for stock items) so a Pending ->
+    // Authorized GIN still draws from the picked batch instead of a blind FIFO walk.
     private UUID stockBatchId;
 
     // Set when this line moves one specific registered asset (quantity 1). Such a line bypasses

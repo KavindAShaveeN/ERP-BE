@@ -6,10 +6,12 @@ import com.rr.erp.entity.AssetCode;
 import com.rr.erp.entity.ItemCategory;
 import com.rr.erp.entity.ItemCode;
 import com.rr.erp.entity.ItemSubCategory;
+import com.rr.erp.entity.ItemSubSubCategory;
 import com.rr.erp.repository.AssetCodeRepository;
 import com.rr.erp.repository.ItemCategoryRepository;
 import com.rr.erp.repository.ItemCodeRepository;
 import com.rr.erp.repository.ItemSubCategoryRepository;
+import com.rr.erp.repository.ItemSubSubCategoryRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -24,17 +26,20 @@ public class AssetCodeService {
     private final AssetCodeRepository assetCodeRepository;
     private final ItemCategoryRepository categoryRepository;
     private final ItemSubCategoryRepository subCategoryRepository;
+    private final ItemSubSubCategoryRepository subSubCategoryRepository;
     private final ItemCodeRepository itemCodeRepository;
 
     public AssetCodeService(
             AssetCodeRepository assetCodeRepository,
             ItemCategoryRepository categoryRepository,
             ItemSubCategoryRepository subCategoryRepository,
+            ItemSubSubCategoryRepository subSubCategoryRepository,
             ItemCodeRepository itemCoderRepository
     ) {
         this.assetCodeRepository = assetCodeRepository;
         this.categoryRepository = categoryRepository;
         this.subCategoryRepository = subCategoryRepository;
+        this.subSubCategoryRepository = subSubCategoryRepository;
         this.itemCodeRepository = itemCoderRepository;
     }
 
@@ -55,6 +60,26 @@ public class AssetCodeService {
             );
         }
 
+        ItemSubSubCategory subSubCategory = null;
+
+        if (request.getItemSubSubCategoryId() != null) {
+
+            subSubCategory = subSubCategoryRepository
+                    .findById(request.getItemSubSubCategoryId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Item sub sub category not found with id: " + request.getItemSubSubCategoryId()
+                    ));
+
+            if (!request.getItemSubCategoryId().equals(subSubCategory.getItemSubCategoryId())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Item sub sub category " + request.getItemSubSubCategoryId()
+                                + " does not belong to item sub category " + request.getItemSubCategoryId()
+                );
+            }
+        }
+
         String assetCodeValue = request.getAssetCodeCode().trim();
 
         if (assetCodeRepository.existsByAssetCodeCode(assetCodeValue)) {
@@ -68,10 +93,19 @@ public class AssetCodeService {
         ItemCategory category = categoryRepository.getItemCategoryById(request.getItemCategoryId());
         ItemSubCategory subCategory = subCategoryRepository.getItemSubCategoryById(request.getItemSubCategoryId());
         ItemCode code = new ItemCode ();
-        code.setItemCodeCode(category.getItemCategoryCode() + "-" + subCategory.getItemSubCategoryCode());
-        code.setItemCodeName(category.getItemCategoryName() + "," + subCategory.getItemSubCategoryName());
+        String itemCodeCode = category.getItemCategoryCode() + "-" + subCategory.getItemSubCategoryCode();
+        String itemCodeName = category.getItemCategoryName() + "," + subCategory.getItemSubCategoryName();
+
+        if (subSubCategory != null) {
+            itemCodeCode += "-" + subSubCategory.getItemSubSubCategoryCode();
+            itemCodeName += "," + subSubCategory.getItemSubSubCategoryName();
+        }
+
+        code.setItemCodeCode(itemCodeCode);
+        code.setItemCodeName(itemCodeName);
         code.setItemCategoryId(request.getItemCategoryId());
         code.setItemSubCategoryId(request.getItemSubCategoryId());
+        code.setItemSubSubCategoryId(request.getItemSubSubCategoryId());
         if(!itemCodeRepository.existsByCode(code.getItemCodeCode())){
             request.setItemCodeId(itemCodeRepository.addItemCode(code));
         }
@@ -93,6 +127,10 @@ public class AssetCodeService {
 
     public List<AssetCode> getAllAssetCodes() {
         return assetCodeRepository.getAllAssetCodes();
+    }
+
+    public List<AssetCode> getUnregisteredAssetCodes() {
+        return assetCodeRepository.getUnregisteredAssetCodes();
     }
 
     public AssetCode getAssetCode(String assetCodeCode) {

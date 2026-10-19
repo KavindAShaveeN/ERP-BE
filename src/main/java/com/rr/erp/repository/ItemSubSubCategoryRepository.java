@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class ItemSubSubCategoryRepository {
@@ -67,6 +68,28 @@ public class ItemSubSubCategoryRepository {
         Integer count = jdbcTemplate.queryForObject(sql, parameters, Integer.class);
 
         return count != null && count > 0;
+    }
+
+    public Optional<ItemSubSubCategory> findById(Long id) {
+
+        String sql = """
+                SELECT
+                    item_subSubCategory_id AS "itemSubSubCategoryId",
+                    item_subSubCategory_code AS "itemSubSubCategoryCode",
+                    item_subSubCategory_name AS "itemSubSubCategoryName",
+                    item_subCategory_id AS "itemSubCategoryId"
+                FROM item_subSubCategory
+                WHERE item_subSubCategory_id = :id
+                """;
+
+        MapSqlParameterSource parameters = new MapSqlParameterSource()
+                .addValue("id", id);
+
+        return jdbcTemplate.query(
+                sql,
+                parameters,
+                new BeanPropertyRowMapper<>(ItemSubSubCategory.class)
+        ).stream().findFirst();
     }
 
     public boolean existsByParentIdAndCode(Long subCategoryId, String code) {

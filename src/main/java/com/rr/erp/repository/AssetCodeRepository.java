@@ -66,6 +66,29 @@ public class AssetCodeRepository {
         );
     }
 
+    public List<AssetCode> getUnregisteredAssetCodes() {
+
+        String sql = """
+                SELECT
+                    ac.asset_code_id AS "assetCodeId",
+                    ac.asset_code_code AS "assetCodeCode",
+                    ac.item_code_id AS "itemCodeId"
+                FROM asset_code ac
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM asset a
+                    WHERE a.asset_code_id = ac.asset_code_id
+                )
+                ORDER BY ac.asset_code_code
+                """;
+
+        return jdbcTemplate.query(
+                sql,
+                new MapSqlParameterSource(),
+                new BeanPropertyRowMapper<>(AssetCode.class)
+        );
+    }
+
     public Optional<AssetCode> findByAssetCodeCode(String assetCodeCode) {
 
         String sql = """

@@ -107,6 +107,11 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<!-- Keep parameter names so Spring can bind @RequestParam/@PathVariable by name
+					     (also picked up by IDE compilers such as VS Code's Java extension) -->
+					<parameters>true</parameters>
+				</configuration>
 				<executions>
 					<execution>
 						<id>default-compile</id>

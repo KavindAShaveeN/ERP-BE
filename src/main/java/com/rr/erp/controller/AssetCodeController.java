@@ -42,6 +42,15 @@ public class AssetCodeController {
     }
 
     /*
+     * GET /api/asset-codes/unregistered
+     * Asset codes that no asset has been registered against yet
+     */
+    @GetMapping("/unregistered")
+    public ResponseEntity<List<AssetCode>> getUnregisteredAssetCodes() {
+        return ResponseEntity.ok(assetCodeService.getUnregisteredAssetCodes());
+    }
+
+    /*
      * GET /api/asset-codes/AS-40-03-VOL-0001
      */
     @GetMapping("/{assetCodeCode}")

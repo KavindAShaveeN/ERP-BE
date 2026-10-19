@@ -16,6 +16,9 @@ public class AssetCodeRequestDTO {
     @NotNull(message = "Item sub category ID is required")
     private Long itemSubCategoryId;
 
+    // Optional: when given, it must belong to the sub category and is added to the item code
+    private Long itemSubSubCategoryId;
+
     @NotBlank(message = "Asset code is required")
     @Size(max = 100, message = "Asset code cannot exceed 100 characters")
     private String assetCodeCode;

@@ -34,6 +34,7 @@ public class Employee {
     private String gender;
     private String maritalStatus;
     private String nationality;
+    @NotBlank(message = "Contact number is required")
     private String contactNumber;
     private String altContactNumber;
     private String email;

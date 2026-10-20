@@ -200,6 +200,27 @@ public class AssetLocationRepository {
         return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
     }
 
+    // An asset already recorded on the same movement document that is coupled to assetCode.
+    public Optional<String> findCoupledPartnerOnDocument(String assetCode, UUID docUuid) {
+
+        if (docUuid == null) {
+            return Optional.empty();
+        }
+
+        List<String> partners = jdbcTemplate.queryForList("""
+                SELECT l.asset_code
+                FROM asset_location l
+                JOIN asset_couple c
+                  ON (c.asset_code_a = ? AND c.asset_code_b = l.asset_code)
+                  OR (c.asset_code_b = ? AND c.asset_code_a = l.asset_code)
+                WHERE l.source_doc_id = ?
+                  AND l.is_active = TRUE
+                LIMIT 1
+                """, String.class, assetCode, assetCode, docUuid);
+
+        return partners.isEmpty() ? Optional.empty() : Optional.of(partners.get(0));
+    }
+
     // SOFT DELETE
     public int deleteAssetLocation(UUID assetLocationId) {
 

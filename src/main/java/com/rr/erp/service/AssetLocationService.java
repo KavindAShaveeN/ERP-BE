@@ -368,7 +368,15 @@ public class AssetLocationService {
         location.setChangedBy(by);
         location.setChangedDate(date);
         location.setAssignedEmployee(assignee);
-        location.setReason(reason);
+        String finalReason = reason;
+        String partner = assetLocationRepository.findCoupledPartnerOnDocument(assetCode, docUuid).orElse(null);
+        if (partner != null) {
+            finalReason = (reason == null ? "" : reason) + " (coupled with " + partner + ")";
+            if (finalReason.length() > 500) {
+                finalReason = finalReason.substring(0, 500);
+            }
+        }
+        location.setReason(finalReason);
         location.setIsActive(true);
 
         assetLocationRepository.createAssetLocation(location);

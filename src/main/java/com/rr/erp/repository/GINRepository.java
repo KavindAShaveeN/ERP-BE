@@ -680,7 +680,8 @@ public class GINRepository {
                     length_m,
                     width_m,
                     asset_code,
-                    mr_item_id
+                    mr_item_id,
+                    stock_batch_id
                 FROM gin_item
                 WHERE gin_id = ?
                 """;
@@ -748,6 +749,10 @@ public class GINRepository {
 
                     item.setMrItemId(
                             rs.getObject("mr_item_id", UUID.class)
+                    );
+
+                    item.setStockBatchId(
+                            rs.getObject("stock_batch_id", UUID.class)
                     );
 
                     return item;
@@ -843,9 +848,10 @@ public class GINRepository {
                     length_m,
                     width_m,
                     asset_code,
-                    mr_item_id
+                    mr_item_id,
+                    stock_batch_id
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         jdbcTemplate.update(
@@ -864,7 +870,8 @@ public class GINRepository {
                 item.getLengthM(),
                 item.getWidthM(),
                 item.getAssetCode(),
-                item.getMrItemId()
+                item.getMrItemId(),
+                item.getStockBatchId()
         );
     }
 

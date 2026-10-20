@@ -205,6 +205,11 @@ public class LoginController {
                     );
         }
 
+        if (registerRequest.getRoleId() == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", "Choose a role for this user"));
+        }
         if (registerRequest.getPassword().length() < MIN_PASSWORD_LENGTH) {
             return ResponseEntity
                     .badRequest()
@@ -228,6 +233,9 @@ public class LoginController {
             case USERNAME_TAKEN -> ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .body(Map.of("message", "This username is already taken"));
+            case ROLE_NOT_FOUND -> ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", "Choose an active role for this user"));
         };
     }
 }

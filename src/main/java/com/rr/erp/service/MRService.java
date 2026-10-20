@@ -150,6 +150,29 @@ public class MRService {
         }
     }
 
+    /** An MR can be deleted by its requester (or anyone with MR.DELETE) until it is approved. */
+    @Transactional
+    public void deleteMaterialRequest(UUID mrId) {
+        MR existing = mrRepository.findById(mrId).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Material request not found: " + mrId));
+
+        String actor = SecurityUtil.currentEmployeeCodeOrNull();
+        if (actor != null && !actor.equals(existing.getRequestedBy())) {
+            permissionService.require("MR.DELETE", existing.getRequestingProjectCode());
+        }
+        if (Boolean.TRUE.equals(existing.getIsApproved())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An approved material request cannot be deleted");
+        }
+
+        try {
+            approvalService.deleteForDocument("MR", mrId);
+            mrRepository.deleteById(mrId);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This material request is already used by another document and cannot be deleted");
+        }
+    }
+
     public PagedResponse<MR> getByRequestingProjectCode(
             String requestingProjectCode,
             int page,

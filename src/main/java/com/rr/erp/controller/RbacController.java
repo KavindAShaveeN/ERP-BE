@@ -2,6 +2,7 @@ package com.rr.erp.controller;
 
 import com.rr.erp.dto.RbacDtos.MeDto;
 import com.rr.erp.dto.RbacDtos.PermissionDto;
+import com.rr.erp.dto.RbacDtos.ProjectAccessDto;
 import com.rr.erp.dto.RbacDtos.RoleDto;
 import com.rr.erp.dto.RbacDtos.RoleRequest;
 import com.rr.erp.dto.RbacDtos.UserAccessDto;
@@ -32,6 +33,12 @@ public class RbacController {
     @GetMapping("/me")
     public MeDto me(@RequestParam(required = false) String projectCode) {
         return rbacService.me(projectCode);
+    }
+
+    // GET /api/me/projects - per project, the PROJECT.* permissions the logged-in user holds
+    @GetMapping("/me/projects")
+    public ProjectAccessDto myProjects() {
+        return rbacService.projectAccess();
     }
 
     @GetMapping("/permissions")

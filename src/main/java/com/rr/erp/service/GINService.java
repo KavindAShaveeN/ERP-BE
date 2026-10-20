@@ -225,6 +225,25 @@ public class GINService {
         return gin;
     }
 
+    /** A GIN can be deleted until it is authorized; after that its stock has moved. */
+    @Transactional
+    public void deleteGin(UUID ginId) {
+        GIN existing = ginRepository.findById(ginId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "GIN not found: " + ginId));
+
+        if (Boolean.TRUE.equals(existing.getIsAuthorized())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An authorized GIN cannot be deleted");
+        }
+
+        try {
+            assetPackService.deleteSelections(AssetPackService.DOC_GIN, ginId);
+            ginRepository.deleteById(ginId);
+        } catch (org.springframework.dao.DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This GIN is already used by another document (for example a transport trip) and cannot be deleted");
+        }
+    }
+
     /**
      * Records security's gate confirmation that this GIN's goods/vehicle actually left the
      * issuing project. Deliberately bypasses updateGin's "no edits after authorization" lock

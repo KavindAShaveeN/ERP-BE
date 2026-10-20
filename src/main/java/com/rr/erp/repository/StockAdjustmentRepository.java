@@ -437,6 +437,11 @@ public class StockAdjustmentRepository {
     }
 
 
+    /** Deletes the adjustment; its items cascade. */
+    public int deleteById(UUID stockAdjustmentId) {
+        return jdbcTemplate.update("DELETE FROM stock_adjustment WHERE stock_adjustment_id = ?", stockAdjustmentId);
+    }
+
     public int deleteItems(UUID stockAdjustmentId) {
 
         String sql = """

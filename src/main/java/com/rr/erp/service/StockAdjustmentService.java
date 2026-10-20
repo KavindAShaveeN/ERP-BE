@@ -126,6 +126,25 @@ public class StockAdjustmentService {
     }
 
 
+    /** An adjustment can be deleted until it is approved; after that its stock has moved. */
+    @Transactional
+    public void deleteStockAdjustment(UUID stockAdjustmentId) {
+        StockAdjustment existing = repository.findById(stockAdjustmentId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Stock adjustment not found: " + stockAdjustmentId));
+
+        if (Boolean.TRUE.equals(existing.getIsApproved())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An approved stock adjustment cannot be deleted");
+        }
+
+        try {
+            repository.deleteById(stockAdjustmentId);
+        } catch (org.springframework.dao.DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This stock adjustment is already used by another document and cannot be deleted");
+        }
+    }
+
     @Transactional
     public StockAdjustment updateStockAdjustment(
             UUID stockAdjustmentId,

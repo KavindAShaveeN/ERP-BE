@@ -1,5 +1,6 @@
 package com.rr.erp.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.rr.erp.entity.ItemBrand;
 import com.rr.erp.service.ItemBrandService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ public class ItemBrandController {
         this.brandService = brandService;
     }
 
+    @PreAuthorize("@perm.has('ITEM.CREATE')")
     @PostMapping
     public ResponseEntity<ItemBrand> addBrand(
             @Valid @RequestBody ItemBrand request
@@ -36,6 +38,7 @@ public class ItemBrandController {
         return ResponseEntity.ok(brandService.getAllBrands());
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @PutMapping("/{id}")
     public ResponseEntity<ItemBrand> updateBrand(
             @PathVariable Long id,

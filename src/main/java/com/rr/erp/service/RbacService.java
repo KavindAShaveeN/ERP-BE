@@ -1,6 +1,9 @@
 package com.rr.erp.service;
 
+import com.rr.erp.dto.ProjectResponseDTO;
 import com.rr.erp.dto.RbacDtos.MeDto;
+import com.rr.erp.dto.RbacDtos.ProjectAccessDto;
+import com.rr.erp.dto.RbacDtos.ProjectAccessEntry;
 import com.rr.erp.dto.RbacDtos.PermissionDto;
 import com.rr.erp.dto.RbacDtos.PermissionOverride;
 import com.rr.erp.dto.RbacDtos.RoleAssignment;
@@ -8,6 +11,7 @@ import com.rr.erp.dto.RbacDtos.RoleDto;
 import com.rr.erp.dto.RbacDtos.RoleRequest;
 import com.rr.erp.dto.RbacDtos.UserAccessDto;
 import com.rr.erp.dto.RbacDtos.UserAccessRequest;
+import com.rr.erp.repository.ProjectRepository;
 import com.rr.erp.repository.RbacRepository;
 import com.rr.erp.security.SecurityUtil;
 import org.springframework.http.HttpStatus;
@@ -26,9 +30,13 @@ public class RbacService {
     private final RbacRepository repository;
     private final PermissionService permissionService;
 
-    public RbacService(RbacRepository repository, PermissionService permissionService) {
+    private final ProjectRepository projectRepository;
+
+    public RbacService(RbacRepository repository, PermissionService permissionService,
+                       ProjectRepository projectRepository) {
         this.repository = repository;
         this.permissionService = permissionService;
+        this.projectRepository = projectRepository;
     }
 
 
@@ -46,6 +54,25 @@ public class RbacService {
         List<String> permissions = new ArrayList<>(permissionService.permissionsFor(employeeCode, projectCode, anyScope));
         permissions.sort(String::compareTo);
         return new MeDto(employeeCode, projectCode, permissionService.roleNamesFor(employeeCode, projectCode), permissions);
+    }
+
+
+    /** Which projects the caller may view / edit (a project-scoped role or a global role), and whether they may create one. */
+    public ProjectAccessDto projectAccess() {
+        String employeeCode = SecurityUtil.currentEmployeeCode();
+        boolean canCreate = permissionService.permissionsFor(employeeCode, null, true).contains("PROJECT.CREATE");
+
+        List<ProjectAccessEntry> projects = new ArrayList<>();
+        for (ProjectResponseDTO project : projectRepository.getAllProjects()) {
+            List<String> codes = permissionService.permissionsFor(employeeCode, project.getProjectCode(), false).stream()
+                    .filter(code -> code.startsWith("PROJECT."))
+                    .sorted()
+                    .toList();
+            if (!codes.isEmpty()) {
+                projects.add(new ProjectAccessEntry(project.getProjectCode(), codes));
+            }
+        }
+        return new ProjectAccessDto(canCreate, projects);
     }
 
 

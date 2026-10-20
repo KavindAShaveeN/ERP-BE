@@ -1,5 +1,6 @@
 package com.rr.erp.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.rr.erp.entity.ItemModel;
 import com.rr.erp.service.ItemModelService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ public class ItemModelController {
         this.modelService = modelService;
     }
 
+    @PreAuthorize("@perm.has('ITEM.CREATE')")
     @PostMapping
     public ResponseEntity<ItemModel> addModel(
             @Valid @RequestBody ItemModel request
@@ -36,6 +38,7 @@ public class ItemModelController {
         return ResponseEntity.ok(modelService.getAllModels());
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @PutMapping("/{id}")
     public ResponseEntity<ItemModel> updateModel(
             @PathVariable Long id,

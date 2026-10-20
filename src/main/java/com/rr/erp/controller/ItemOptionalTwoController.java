@@ -1,5 +1,6 @@
 package com.rr.erp.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.rr.erp.entity.ItemOptionalTwo;
 import com.rr.erp.service.ItemOptionalTwoService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ public class ItemOptionalTwoController {
         this.optionalTwoService = optionalTwoService;
     }
 
+    @PreAuthorize("@perm.has('ITEM.CREATE')")
     @PostMapping
     public ResponseEntity<ItemOptionalTwo> addOptionalTwo(
             @Valid @RequestBody ItemOptionalTwo request
@@ -36,6 +38,7 @@ public class ItemOptionalTwoController {
         return ResponseEntity.ok(optionalTwoService.getAllOptionalTwos());
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @PutMapping("/{id}")
     public ResponseEntity<ItemOptionalTwo> updateOptionalTwo(
             @PathVariable Long id,

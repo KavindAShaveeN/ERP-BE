@@ -1,5 +1,6 @@
 package com.rr.erp.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.rr.erp.entity.ItemSubSubCategory;
 import com.rr.erp.service.ItemSubSubCategoryService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ public class ItemSubSubCategoryController {
         this.subSubCategoryService = subSubCategoryService;
     }
 
+    @PreAuthorize("@perm.has('ITEM.CREATE')")
     @PostMapping
     public ResponseEntity<ItemSubSubCategory> addSubSubCategory(
             @Valid @RequestBody ItemSubSubCategory request
@@ -36,6 +38,7 @@ public class ItemSubSubCategoryController {
         return ResponseEntity.ok(subSubCategoryService.getAllSubSubCategories());
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @PutMapping("/{id}")
     public ResponseEntity<ItemSubSubCategory> updateSubSubCategory(
             @PathVariable Long id,

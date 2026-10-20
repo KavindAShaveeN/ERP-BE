@@ -179,6 +179,25 @@ public class GRNService {
         return new PagedResponse<>(grns, page, size, totalElements);
     }
 
+    /** A GRN can be deleted until it is approved; after that its stock has been credited. */
+    @Transactional
+    public void deleteGRN(UUID grnId) {
+        GRN existing = grnRepository.findById(grnId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "GRN not found: " + grnId));
+
+        if (Boolean.TRUE.equals(existing.getIsApproved())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An approved GRN cannot be deleted");
+        }
+
+        try {
+            assetPackService.deleteSelections(AssetPackService.DOC_GRN, grnId);
+            grnRepository.deleteById(grnId);
+        } catch (org.springframework.dao.DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This GRN is already used by another document and cannot be deleted");
+        }
+    }
+
     @Transactional
     public GRN updateGRN(UUID grnId, GRN grn) {
 

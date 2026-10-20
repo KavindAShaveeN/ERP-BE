@@ -1,5 +1,6 @@
 package com.rr.erp.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.rr.erp.entity.InventoryItem;
 import com.rr.erp.service.InventoryItemService;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ public class InventoryItemController {
     // ==================================
     // POST /api/inventory_item/
     // ==================================
+    @PreAuthorize("@perm.has('ITEM.CREATE')")
     @PostMapping("/")
     public ResponseEntity<InventoryItem> createInventoryItem(
             @RequestBody InventoryItem inventoryItem
@@ -66,6 +68,7 @@ public class InventoryItemController {
     // ==================================
     // PUT /api/inventory_item/{id}
     // ==================================
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @PutMapping("/{inventoryItemId}")
     public ResponseEntity<InventoryItem> updateInventoryItem(
             @PathVariable Integer inventoryItemId,
@@ -83,6 +86,7 @@ public class InventoryItemController {
     // ==================================
     // DELETE /api/inventory_item/{id}
     // ==================================
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @DeleteMapping("/{inventoryItemId}")
     public ResponseEntity<Void> deleteInventoryItem(
             @PathVariable Integer inventoryItemId

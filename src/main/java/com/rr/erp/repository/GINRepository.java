@@ -1104,6 +1104,11 @@ public class GINRepository {
     // DELETE OLD ITEMS ON UPDATE
     // =========================
 
+    /** Deletes the GIN; its items cascade. */
+    public int deleteById(UUID ginId) {
+        return jdbcTemplate.update("DELETE FROM gin WHERE gin_id = ?", ginId);
+    }
+
     public void deleteGinItems(UUID ginId) {
 
         String sql = """

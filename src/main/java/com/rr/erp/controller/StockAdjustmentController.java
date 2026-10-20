@@ -36,6 +36,12 @@ public class StockAdjustmentController {
 
 
 
+    @DeleteMapping("/{stockAdjustmentId}")
+    public ResponseEntity<Void> deleteStockAdjustment(@PathVariable UUID stockAdjustmentId) {
+        service.deleteStockAdjustment(stockAdjustmentId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/created/{projectCode}")
     public ResponseEntity<PagedResponse<StockAdjustment>>
     getCreatedAdjustments(

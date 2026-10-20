@@ -189,6 +189,24 @@ public class ApprovalRepository {
         }, requestId);
     }
 
+    /** Removes a document's approval requests (steps and actions cascade). */
+    public void deleteForDocument(String docType, UUID docId) {
+        jdbc.update("DELETE FROM approval_requests WHERE doc_type = ? AND doc_id = ?", docType, docId);
+    }
+
+    /** The human-readable code of a document (MR code), when the type has one. */
+    public java.util.Optional<String> findDocCode(String docType, UUID docId) {
+        if (!"MR".equals(docType)) {
+            return java.util.Optional.empty();
+        }
+        return jdbc.queryForList("SELECT mr_code FROM mr WHERE mr_id = ?", String.class, docId).stream().findFirst();
+    }
+
+    public java.util.Optional<String> findEmployeeName(String employeeCode) {
+        return jdbc.queryForList("SELECT full_name FROM employee WHERE employee_code = ?", String.class, employeeCode)
+                .stream().filter(n -> n != null && !n.isBlank()).findFirst();
+    }
+
     /** Employees who approved this step. */
     public List<String> findApprovers(UUID requestId, int stepId) {
         return jdbc.queryForList("""
@@ -202,8 +220,8 @@ public class ApprovalRepository {
         return jdbc.queryForList("""
                 SELECT DISTINCT ur.employee_code FROM user_roles ur
                 JOIN roles r ON r.role_id = ur.role_id AND r.is_active
-                WHERE ur.role_id = ?
-                  AND (? OR ur.project_code IS NULL OR ur.project_code = ?)
+                WHERE (ur.role_id = ? AND (? OR ur.project_code IS NULL OR ur.project_code = ?))
+                   OR (r.name = 'ADMIN' AND ur.project_code IS NULL)
                 """, String.class, roleId, anyProject, projectCode);
     }
 
@@ -217,10 +235,12 @@ public class ApprovalRepository {
                 WHERE r.status = 'PENDING' AND r.submitted_by <> ?
                   AND EXISTS (
                       SELECT 1 FROM user_roles ur JOIN roles ro ON ro.role_id = ur.role_id AND ro.is_active
-                      WHERE ur.employee_code = ? AND ur.role_id = s.role_id
-                        AND (s.scope = 'ANY' OR ur.project_code IS NULL OR ur.project_code =
-                             CASE s.scope WHEN 'DESTINATION_PROJECT' THEN COALESCE(r.destination_project, r.requesting_project)
-                                          ELSE r.requesting_project END))
+                      WHERE ur.employee_code = ?
+                        AND ((ro.name = 'ADMIN' AND ur.project_code IS NULL)
+                          OR (ur.role_id = s.role_id
+                            AND (s.scope = 'ANY' OR ur.project_code IS NULL OR ur.project_code =
+                                 CASE s.scope WHEN 'DESTINATION_PROJECT' THEN COALESCE(r.destination_project, r.requesting_project)
+                                              ELSE r.requesting_project END))))
                   AND NOT EXISTS (
                       SELECT 1 FROM approval_actions a
                       WHERE a.request_id = r.request_id AND a.step_id = s.step_id

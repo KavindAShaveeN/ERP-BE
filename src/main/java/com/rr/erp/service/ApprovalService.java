@@ -209,6 +209,12 @@ public class ApprovalService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No approval request for this document"));
     }
 
+    /** Drops the approval history of a document that is being deleted. */
+    @Transactional
+    public void deleteForDocument(String docType, UUID docId) {
+        repository.deleteForDocument(docType, docId);
+    }
+
     /** Requests waiting on the logged-in employee. */
     public List<ApprovalRequestDto> pendingForMe() {
         String me = SecurityUtil.currentEmployeeCode();
@@ -233,7 +239,9 @@ public class ApprovalService {
                 .toList();
         List<ActionDto> actions = repository.findActions(r.requestId());
         return new ApprovalRequestDto(r.requestId(), r.docType(), r.docId(), r.status(), r.requestingProject(),
-                r.destinationProject(), r.submittedBy(), r.submittedAt(), r.completedAt(), steps, actions);
+                r.destinationProject(), r.submittedBy(), r.submittedAt(), r.completedAt(), steps, actions,
+                repository.findDocCode(r.docType(), r.docId()).orElse(null),
+                repository.findEmployeeName(r.submittedBy()).orElse(null));
     }
 
     private ApprovalCallback callback(String docType) {

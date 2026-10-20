@@ -100,6 +100,13 @@ public class GINController {
         );
     }
 
+    // DELETE /api/gin/{ginId} - only until the GIN is authorized
+    @DeleteMapping("/{ginId}")
+    public ResponseEntity<Void> deleteGin(@PathVariable UUID ginId) {
+        ginService.deleteGin(ginId);
+        return ResponseEntity.noContent().build();
+    }
+
     // PUT /api/gin/{ginId}/gate-verify?gateVerifiedBy=NAME
     @PutMapping("/{ginId}/gate-verify")
     public ResponseEntity<GIN> verifyGinAtGate(

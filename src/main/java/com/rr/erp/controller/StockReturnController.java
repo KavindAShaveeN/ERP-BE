@@ -29,6 +29,12 @@ public class StockReturnController {
     }
 
 
+    @DeleteMapping("/{stockReturnId}")
+    public ResponseEntity<Void> deleteStockReturn(@PathVariable UUID stockReturnId) {
+        service.deleteStockReturn(stockReturnId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/created/{fromProjectCode}")
     public ResponseEntity<PagedResponse<StockReturn>>
     getCreatedReturns(

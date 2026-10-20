@@ -80,6 +80,12 @@ public class AssetPackService {
         }
     }
 
+    /** Drops the pack selections recorded for a document that is being deleted. */
+    @Transactional
+    public void deleteSelections(String docType, UUID docId) {
+        repository.deleteSelections(docType, docId);
+    }
+
     /** Called when the asset actually moves: ticked packs go with it, unticked ones stay behind. */
     @Transactional
     public void applySelections(String docType, UUID docId, String assetCode) {

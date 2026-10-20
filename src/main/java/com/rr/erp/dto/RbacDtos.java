@@ -39,4 +39,11 @@ public final class RbacDtos {
 
     public record MeDto(String employeeCode, String projectCode, List<String> roles, List<String> permissions) {
     }
+
+    /** PROJECT.* permissions the caller holds for one project. */
+    public record ProjectAccessEntry(String projectCode, List<String> permissions) {
+    }
+
+    public record ProjectAccessDto(boolean canCreate, List<ProjectAccessEntry> projects) {
+    }
 }

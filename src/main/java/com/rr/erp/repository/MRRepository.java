@@ -347,6 +347,11 @@ public class MRRepository {
                 """, rejectedBy, mrId);
     }
 
+    /** Deletes the MR; its items, allocations and forward-plan rows cascade. */
+    public int deleteById(UUID mrId) {
+        return jdbcTemplate.update("DELETE FROM mr WHERE mr_id = ?", mrId);
+    }
+
     public void deleteItemsByMrId(UUID mrId) {
 
         String sql = """

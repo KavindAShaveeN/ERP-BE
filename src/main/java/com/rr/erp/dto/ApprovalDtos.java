@@ -43,7 +43,8 @@ public final class ApprovalDtos {
     public record ApprovalRequestDto(UUID requestId, String docType, UUID docId, String status,
                                      String requestingProject, String destinationProject,
                                      String submittedBy, LocalDateTime submittedAt, LocalDateTime completedAt,
-                                     List<StepStatus> steps, List<ActionDto> actions) {
+                                     List<StepStatus> steps, List<ActionDto> actions,
+                                     String docCode, String submittedByName) {
     }
 
     public record DecisionRequest(@Size(max = 500) String remark) {

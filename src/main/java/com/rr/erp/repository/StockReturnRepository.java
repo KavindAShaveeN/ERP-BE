@@ -409,6 +409,11 @@ public class StockReturnRepository {
         return jdbcTemplate.update(sql, gateVerifiedBy, gateVerifiedDate, stockReturnId);
     }
 
+    /** Deletes the return; its items cascade. */
+    public int deleteById(UUID stockReturnId) {
+        return jdbcTemplate.update("DELETE FROM stock_return WHERE stock_return_id = ?", stockReturnId);
+    }
+
     public void deleteItems(UUID stockReturnId) {
 
         String sql = """

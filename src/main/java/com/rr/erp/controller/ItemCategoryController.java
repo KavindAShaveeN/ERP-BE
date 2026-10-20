@@ -1,5 +1,6 @@
 package com.rr.erp.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.rr.erp.entity.ItemCategory;
 import com.rr.erp.service.ItemCategoryService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ public class ItemCategoryController {
         this.categoryService = categoryService;
     }
 
+    @PreAuthorize("@perm.has('ITEM.CREATE')")
     @PostMapping
     public ResponseEntity<ItemCategory> addCategory(
             @Valid @RequestBody ItemCategory request
@@ -38,6 +40,7 @@ public class ItemCategoryController {
         return ResponseEntity.ok(categoryService.getAllCategories());
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @PutMapping("/{id}")
     public ResponseEntity<ItemCategory> updateCategory(
             @PathVariable Long id,

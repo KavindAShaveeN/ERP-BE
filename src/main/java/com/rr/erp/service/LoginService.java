@@ -5,9 +5,12 @@ import com.rr.erp.dto.ChangePasswordRequest;
 import com.rr.erp.dto.LoginRequest;
 import com.rr.erp.dto.LoginResponse;
 import com.rr.erp.dto.RegisterCredentialRequest;
+import com.rr.erp.dto.UserLoginDto;
 import com.rr.erp.entity.Credential;
 import com.rr.erp.repository.LoginRepository;
+import com.rr.erp.repository.RbacRepository;
 import com.rr.erp.security.JwtService;
+import com.rr.erp.security.SecurityUtil;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +26,20 @@ public class LoginService {
     private final JwtService jwtService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    private final RbacRepository rbacRepository;
+
     public LoginService(LoginRepository loginRepository, LoginHistoryService loginHistoryService,
-                        JwtService jwtService) {
+                        JwtService jwtService, RbacRepository rbacRepository) {
         this.loginRepository = loginRepository;
         this.loginHistoryService = loginHistoryService;
         this.jwtService = jwtService;
+        this.rbacRepository = rbacRepository;
+    }
+
+
+    /** Every employee and whether they already have a login (for the administration page). */
+    public List<UserLoginDto> listEmployeeLogins() {
+        return loginRepository.findEmployeeLogins();
     }
 
 
@@ -118,6 +130,8 @@ public class LoginService {
                 registerRequest.getUserName(),
                 passwordEncoder.encode(registerRequest.getPassword())
         );
+        rbacRepository.audit(SecurityUtil.currentEmployeeCodeOrNull(), "USER", registerRequest.getEmployeeCode(),
+                "created login '" + registerRequest.getUserName() + "'");
 
         return RegisterResult.SUCCESS;
     }

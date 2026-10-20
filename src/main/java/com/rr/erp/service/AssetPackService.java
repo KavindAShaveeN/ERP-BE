@@ -60,11 +60,13 @@ public class AssetPackService {
     @Transactional
     public void saveSelections(String docType, UUID docId, List<? extends PackCarrier> items) {
 
-        repository.deleteSelections(docType, docId);
-
-        if (items == null) {
+        // A payload that carries no pack information at all (for example an approval sent from
+        // a view page) must not wipe the selections recorded when the document was created.
+        if (items == null || items.stream().noneMatch(item -> item.getPackItems() != null)) {
             return;
         }
+
+        repository.deleteSelections(docType, docId);
         for (PackCarrier item : items) {
             String assetCode = item.getAssetCode();
             if (assetCode == null || assetCode.isBlank() || item.getPackItems() == null) {

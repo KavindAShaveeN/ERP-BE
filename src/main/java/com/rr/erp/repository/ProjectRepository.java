@@ -100,6 +100,13 @@ public class ProjectRepository {
         return keyHolder.getKey().intValue();
     }
 
+    public java.util.Optional<String> findCodeById(Integer projectId) {
+        return jdbcTemplate.queryForList(
+                "SELECT project_Code FROM project WHERE projectId = :projectId",
+                new org.springframework.jdbc.core.namedparam.MapSqlParameterSource("projectId", projectId),
+                String.class).stream().findFirst();
+    }
+
     public List<ProjectResponseDTO> getAllProjects() {
 
         String sql = """

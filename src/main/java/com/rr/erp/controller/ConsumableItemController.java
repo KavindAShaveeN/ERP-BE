@@ -1,5 +1,6 @@
 package com.rr.erp.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.rr.erp.entity.ConsumableItem;
 import com.rr.erp.service.ConsumableItemService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ public class ConsumableItemController {
         this.consumableItemService = consumableItemService;
     }
 
+    @PreAuthorize("@perm.has('ITEM.CREATE')")
     @PostMapping
     public ResponseEntity<ConsumableItem> createConsumableItem(@Valid @RequestBody ConsumableItem request) {
         ConsumableItem saved = consumableItemService.addConsumableItem(request);
@@ -36,6 +38,7 @@ public class ConsumableItemController {
         return ResponseEntity.ok(consumableItemService.getConsumableItemById(consumableItemId));
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @PutMapping("/{consumableItemId}")
     public ResponseEntity<ConsumableItem> updateConsumableItem(
             @PathVariable Long consumableItemId,
@@ -45,6 +48,7 @@ public class ConsumableItemController {
         return ResponseEntity.ok(updated);
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @DeleteMapping("/{consumableItemId}")
     public ResponseEntity<Void> deleteConsumableItem(@PathVariable Long consumableItemId) {
         consumableItemService.deleteConsumableItem(consumableItemId);

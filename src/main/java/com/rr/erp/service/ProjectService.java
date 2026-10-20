@@ -19,9 +19,13 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectLocationRepository projectLocationRepository;
 
-    public ProjectService(ProjectRepository projectRepository, ProjectLocationRepository projectLocationRepository){
+    private final PermissionService permissionService;
+
+    public ProjectService(ProjectRepository projectRepository, ProjectLocationRepository projectLocationRepository,
+                          PermissionService permissionService){
         this.projectRepository = projectRepository;
         this.projectLocationRepository = projectLocationRepository;
+        this.permissionService = permissionService;
     }
 
     @Transactional
@@ -54,6 +58,13 @@ public class ProjectService {
             Integer projectId,
             Project projectRequest
     ) {
+
+        // Only people assigned to this project (or holding a global role) may edit it.
+        String projectCode = projectRepository.findCodeById(projectId).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Project not found with ID: " + projectId
+        ));
+        permissionService.require("PROJECT.EDIT", projectCode);
 
         projectRequest.setUpdatedAt(LocalDateTime.now());
 

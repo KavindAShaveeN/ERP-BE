@@ -5,6 +5,7 @@ import com.rr.erp.dto.LoginRequest;
 import com.rr.erp.dto.LoginResponse;
 import com.rr.erp.dto.LogoutRequest;
 import com.rr.erp.dto.RegisterCredentialRequest;
+import com.rr.erp.dto.UserLoginDto;
 import com.rr.erp.service.LoginHistoryService;
 import com.rr.erp.service.LoginService;
 import com.rr.erp.service.RegisterResult;
@@ -12,8 +13,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -21,6 +24,8 @@ import java.util.Optional;
 @RequestMapping("/api")
 @CrossOrigin
 public class LoginController {
+
+    private static final int MIN_PASSWORD_LENGTH = 6;
 
     private final LoginService loginService;
     private final LoginHistoryService loginHistoryService;
@@ -168,8 +173,17 @@ public class LoginController {
     }
 
 
-    // POST /api/register
+    // GET /api/user-logins - every employee and the username of their login, if any (administrators only)
+    @GetMapping("/user-logins")
+    @PreAuthorize("@perm.has('USER.MANAGE')")
+    public List<UserLoginDto> userLogins() {
+        return loginService.listEmployeeLogins();
+    }
+
+
+    // POST /api/register - creates a login for an existing employee (administrators only)
     @PostMapping("/register")
+    @PreAuthorize("@perm.has('USER.MANAGE')")
     public ResponseEntity<?> register(
             @RequestBody RegisterCredentialRequest registerRequest
     ) {
@@ -191,6 +205,19 @@ public class LoginController {
                     );
         }
 
+        if (registerRequest.getRoleId() == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", "Choose a role for this user"));
+        }
+        if (registerRequest.getPassword().length() < MIN_PASSWORD_LENGTH) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", "The password must be at least " + MIN_PASSWORD_LENGTH + " characters"));
+        }
+        registerRequest.setEmployeeCode(registerRequest.getEmployeeCode().trim());
+        registerRequest.setUserName(registerRequest.getUserName().trim());
+
         RegisterResult result = loginService.register(registerRequest);
 
         return switch (result) {
@@ -206,6 +233,9 @@ public class LoginController {
             case USERNAME_TAKEN -> ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .body(Map.of("message", "This username is already taken"));
+            case ROLE_NOT_FOUND -> ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", "Choose an active role for this user"));
         };
     }
 }

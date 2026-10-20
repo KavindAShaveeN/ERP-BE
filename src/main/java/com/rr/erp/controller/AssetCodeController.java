@@ -1,6 +1,7 @@
 package com.rr.erp.controller;
 
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.rr.erp.dto.AssetCodeRequestDTO;
 import com.rr.erp.entity.AssetCode;
 import com.rr.erp.service.AssetCodeService;
@@ -23,6 +24,7 @@ public class AssetCodeController {
     }
 
 
+    @PreAuthorize("@perm.has('ITEM.CREATE')")
     @PostMapping
     public ResponseEntity<AssetCode> createAssetCode(
             @Valid @RequestBody AssetCodeRequestDTO request
@@ -67,6 +69,7 @@ public class AssetCodeController {
     /*
      * DELETE /api/asset-codes/AS-40-03-VOL-0001
      */
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @DeleteMapping("/{assetCodeCode}")
     public ResponseEntity<Void> deleteAssetCode(
             @PathVariable String assetCodeCode

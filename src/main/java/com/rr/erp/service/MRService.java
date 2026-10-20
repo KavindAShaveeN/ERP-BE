@@ -2,14 +2,18 @@ package com.rr.erp.service;
 
 import com.rr.erp.dto.PagedResponse;
 import com.rr.erp.entity.MR;
+import com.rr.erp.entity.MRItem;
 import com.rr.erp.repository.MRRepository;
+import com.rr.erp.security.SecurityUtil;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -19,10 +23,15 @@ public class MRService {
 
     private final MRRepository mrRepository;
     private final IssuePlanningService issuePlanningService;
+    private final ApprovalService approvalService;
+    private final PermissionService permissionService;
 
-    public MRService(MRRepository mrRepository, IssuePlanningService issuePlanningService) {
+    public MRService(MRRepository mrRepository, IssuePlanningService issuePlanningService,
+                     ApprovalService approvalService, PermissionService permissionService) {
         this.mrRepository = mrRepository;
         this.issuePlanningService = issuePlanningService;
+        this.approvalService = approvalService;
+        this.permissionService = permissionService;
     }
 
     @Transactional
@@ -34,8 +43,23 @@ public class MRService {
             mr.setMrCode(issuePlanningService.nextForwardMrCode());
         }
 
+        // Who is asking comes from the login token; approval fields are owned by the approval engine.
+        String actor = SecurityUtil.currentEmployeeCodeOrNull();
+        if (actor != null) {
+            permissionService.require("MR.CREATE", mr.getRequestingProjectCode());
+            mr.setRequestedBy(actor);
+        }
+        mr.setIsApproved(false);
+        mr.setCheckedBy(null);
+        mr.setCheckedDate(null);
+        mr.setApprovedBy(null);
+        mr.setApprovedDate(null);
+
         try {
-            return mrRepository.insertMR(mr);
+            MR created = mrRepository.insertMR(mr);
+            approvalService.submit("MR", created.getMrId(), created.getRequestingProjectCode(),
+                    created.getDestinationProjectCode(), created.getRequestedBy(), approvalContext(created));
+            return mrRepository.findById(created.getMrId()).orElse(created);
 
         } catch (DataIntegrityViolationException exception) {
 
@@ -81,6 +105,19 @@ public class MRService {
             );
         }
 
+        // Approve / reject go through /api/approvals; an edit never changes the approval state.
+        MR existing = mrRepository.findById(mrId).orElseThrow();
+        String actor = SecurityUtil.currentEmployeeCodeOrNull();
+        if (actor != null) {
+            permissionService.require("MR.EDIT", existing.getRequestingProjectCode());
+        }
+        mr.setRequestedBy(existing.getRequestedBy());
+        mr.setIsApproved(existing.getIsApproved());
+        mr.setCheckedBy(existing.getCheckedBy());
+        mr.setCheckedDate(existing.getCheckedDate());
+        mr.setApprovedBy(existing.getApprovedBy());
+        mr.setApprovedDate(existing.getApprovedDate());
+
         try {
             int updatedRows = mrRepository.updateMR(mrId, mr);
 
@@ -97,11 +134,6 @@ public class MRService {
              */
             mrRepository.syncItems(mrId, mr.getItems());
 
-            // A rejected (or un-approved) MR must not keep stock reserved for it.
-            if (!Boolean.TRUE.equals(mr.getIsApproved())) {
-                issuePlanningService.onMrRejected(mrId, mr.getCheckedBy());
-            }
-
             return mrRepository.findById(mrId)
                     .orElseThrow(() -> new ResponseStatusException(
                             HttpStatus.NOT_FOUND,
@@ -115,6 +147,29 @@ public class MRService {
                     "Unable to update material request. Check project, "
                             + "employee, item code and UOM values."
             );
+        }
+    }
+
+    /** An MR can be deleted by its requester (or anyone with MR.DELETE) until it is approved. */
+    @Transactional
+    public void deleteMaterialRequest(UUID mrId) {
+        MR existing = mrRepository.findById(mrId).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Material request not found: " + mrId));
+
+        String actor = SecurityUtil.currentEmployeeCodeOrNull();
+        if (actor != null && !actor.equals(existing.getRequestedBy())) {
+            permissionService.require("MR.DELETE", existing.getRequestingProjectCode());
+        }
+        if (Boolean.TRUE.equals(existing.getIsApproved())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An approved material request cannot be deleted");
+        }
+
+        try {
+            approvalService.deleteForDocument("MR", mrId);
+            mrRepository.deleteById(mrId);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This material request is already used by another document and cannot be deleted");
         }
     }
 
@@ -153,5 +208,12 @@ public class MRService {
         long totalElements = mrRepository.countAllAnyStatus();
 
         return new PagedResponse<>(materialRequests, page, size, totalElements);
+    }
+
+    /** Values a workflow step condition can test. */
+    private static Map<String, BigDecimal> approvalContext(MR mr) {
+        BigDecimal total = mr.getItems().stream()
+                .map(MRItem::getQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return Map.of("itemCount", BigDecimal.valueOf(mr.getItems().size()), "totalQuantity", total);
     }
 }

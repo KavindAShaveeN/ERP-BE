@@ -81,6 +81,12 @@ public class GRNController {
         );
     }
 
+    @DeleteMapping("/{grnId}")
+    public ResponseEntity<Void> deleteGRN(@PathVariable UUID grnId) {
+        grnService.deleteGRN(grnId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/{grnId}")
     public ResponseEntity<GRN> updateGRN(
             @PathVariable UUID grnId,

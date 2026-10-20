@@ -1,6 +1,7 @@
 package com.rr.erp.repository;
 
 import com.rr.erp.dto.AssignedProject;
+import com.rr.erp.dto.UserLoginDto;
 import com.rr.erp.entity.Credential;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -65,6 +66,18 @@ public class LoginRepository {
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, employeeCode);
 
         return count != null && count > 0;
+    }
+
+
+    /** Every employee with the username of their login (null when they have none), logins last. */
+    public List<UserLoginDto> findEmployeeLogins() {
+        return jdbcTemplate.query("""
+                SELECT e.employee_code, e.full_name, c.userName AS user_name
+                FROM employee e
+                LEFT JOIN credentials c ON c.employee_code = e.employee_code
+                ORDER BY (c.credential_id IS NULL) DESC, e.employee_code
+                """, (rs, rowNum) -> new UserLoginDto(
+                rs.getString("employee_code"), rs.getString("full_name"), rs.getString("user_name")));
     }
 
 

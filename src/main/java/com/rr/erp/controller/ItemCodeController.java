@@ -1,5 +1,6 @@
 package com.rr.erp.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.rr.erp.dto.ItemCodeDetailResponse;
 import com.rr.erp.dto.ItemCodeNameRequest;
 import com.rr.erp.entity.ItemCode;
@@ -22,6 +23,7 @@ public class ItemCodeController {
         this.itemCodeService = itemCodeService;
     }
 
+    @PreAuthorize("@perm.has('ITEM.CREATE')")
     @PostMapping
     public ResponseEntity<ItemCode> createItemCode(@Valid @RequestBody ItemCode request) {
         ItemCode saved = itemCodeService.addItemCode(request);
@@ -38,6 +40,7 @@ public class ItemCodeController {
         return ResponseEntity.ok(itemCodeService.getItemCodeById(itemCodeId));
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @PutMapping("/{itemCodeId}/name")
     public ResponseEntity<ItemCode> updateItemCodeName(
             @PathVariable Long itemCodeId,
@@ -48,6 +51,7 @@ public class ItemCodeController {
         );
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @DeleteMapping("/{itemCodeId}")
     public ResponseEntity<Void> deleteItemCode(@PathVariable Long itemCodeId) {
         itemCodeService.deleteItemCode(itemCodeId);

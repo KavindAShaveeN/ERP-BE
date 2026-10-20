@@ -6,6 +6,7 @@ import com.rr.erp.service.ProjectService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class ProjectController {
     }
 
     @PostMapping
+    @PreAuthorize("@perm.has('PROJECT.CREATE')")
     public ResponseEntity<Project> createProject(
             @Valid @RequestBody Project request
     )

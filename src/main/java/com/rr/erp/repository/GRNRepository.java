@@ -515,6 +515,11 @@ public class GRNRepository {
         );
     }
 
+    /** Deletes the GRN; its items cascade. */
+    public int deleteById(UUID grnId) {
+        return jdbcTemplate.update("DELETE FROM grn WHERE grn_id = ?", grnId);
+    }
+
     public void deleteItemsByGrnId(UUID grnId) {
 
         String sql = """

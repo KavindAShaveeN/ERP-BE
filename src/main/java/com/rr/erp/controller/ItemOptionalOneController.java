@@ -1,5 +1,6 @@
 package com.rr.erp.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.rr.erp.entity.ItemOptionalOne;
 import com.rr.erp.service.ItemOptionalOneService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ public class ItemOptionalOneController {
         this.optionalOneService = optionalOneService;
     }
 
+    @PreAuthorize("@perm.has('ITEM.CREATE')")
     @PostMapping
     public ResponseEntity<ItemOptionalOne> addOptionalOne(
             @Valid @RequestBody ItemOptionalOne request
@@ -36,6 +38,7 @@ public class ItemOptionalOneController {
         return ResponseEntity.ok(optionalOneService.getAllOptionalOnes());
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @PutMapping("/{id}")
     public ResponseEntity<ItemOptionalOne> updateOptionalOne(
             @PathVariable Long id,

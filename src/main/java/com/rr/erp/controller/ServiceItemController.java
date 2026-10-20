@@ -1,5 +1,6 @@
 package com.rr.erp.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.rr.erp.entity.ServiceItem;
 import com.rr.erp.service.ServiceItemService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ public class ServiceItemController {
         this.serviceItemService = serviceItemService;
     }
 
+    @PreAuthorize("@perm.has('ITEM.CREATE')")
     @PostMapping
     public ResponseEntity<ServiceItem> createServiceItem(@Valid @RequestBody ServiceItem request) {
         ServiceItem saved = serviceItemService.addServiceItem(request);
@@ -36,6 +38,7 @@ public class ServiceItemController {
         return ResponseEntity.ok(serviceItemService.getServiceItemById(serviceItemId));
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @PutMapping("/{serviceItemId}")
     public ResponseEntity<ServiceItem> updateServiceItem(
             @PathVariable Long serviceItemId,
@@ -45,6 +48,7 @@ public class ServiceItemController {
         return ResponseEntity.ok(updated);
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @DeleteMapping("/{serviceItemId}")
     public ResponseEntity<Void> deleteServiceItem(@PathVariable Long serviceItemId) {
         serviceItemService.deleteServiceItem(serviceItemId);

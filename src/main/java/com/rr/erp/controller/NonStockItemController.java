@@ -1,5 +1,6 @@
 package com.rr.erp.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.rr.erp.entity.NonStockItem;
 import com.rr.erp.service.NonStockItemService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ public class NonStockItemController {
         this.nonStockItemService = nonStockItemService;
     }
 
+    @PreAuthorize("@perm.has('ITEM.CREATE')")
     @PostMapping
     public ResponseEntity<NonStockItem> createNonStockItem(@Valid @RequestBody NonStockItem request) {
         NonStockItem saved = nonStockItemService.addNonStockItem(request);
@@ -36,6 +38,7 @@ public class NonStockItemController {
         return ResponseEntity.ok(nonStockItemService.getNonStockItemById(nonStockItemId));
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @PutMapping("/{nonStockItemId}")
     public ResponseEntity<NonStockItem> updateNonStockItem(
             @PathVariable Long nonStockItemId,
@@ -45,6 +48,7 @@ public class NonStockItemController {
         return ResponseEntity.ok(updated);
     }
 
+    @PreAuthorize("@perm.has('ITEM.EDIT')")
     @DeleteMapping("/{nonStockItemId}")
     public ResponseEntity<Void> deleteNonStockItem(@PathVariable Long nonStockItemId) {
         nonStockItemService.deleteNonStockItem(nonStockItemId);

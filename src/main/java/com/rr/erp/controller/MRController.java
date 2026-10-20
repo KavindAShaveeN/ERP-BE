@@ -90,6 +90,12 @@ public class MRController {
 
         return ResponseEntity.ok(updatedMR);
     }
+    @DeleteMapping("/{mrId}")
+    public ResponseEntity<Void> deleteMaterialRequest(@PathVariable UUID mrId) {
+        mrService.deleteMaterialRequest(mrId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/created/{requestingProjectCode}")
     public ResponseEntity<PagedResponse<MR>> getMaterialRequests(
             @PathVariable String requestingProjectCode,

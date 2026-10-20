@@ -7,8 +7,10 @@ import com.rr.erp.entity.StockReturnItem;
 import com.rr.erp.repository.GRNRepository;
 import com.rr.erp.repository.StockReturnRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -87,6 +89,26 @@ public class StockReturnService {
 
 
     // GET CREATED
+    /** A return can be deleted until it is approved; after that its stock has moved. */
+    @Transactional
+    public void deleteStockReturn(UUID stockReturnId) {
+        StockReturn existing = repository.findById(stockReturnId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Stock return not found: " + stockReturnId));
+
+        if (Boolean.TRUE.equals(existing.getIsApproved())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An approved return cannot be deleted");
+        }
+
+        try {
+            assetPackService.deleteSelections(AssetPackService.DOC_STOCK_RETURN, stockReturnId);
+            repository.deleteById(stockReturnId);
+        } catch (org.springframework.dao.DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This return is already used by another document and cannot be deleted");
+        }
+    }
+
     public PagedResponse<StockReturn> getCreatedReturns(
             String fromProjectCode,
             int page,

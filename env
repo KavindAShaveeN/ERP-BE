@@ -1,0 +1,5 @@
+# Copy to .env and fill in values for local runs. .env is git-ignored.
+DB_URL= jdbc:postgresql://database-1.cn0u24eg21dc.ap-south-1.rds.amazonaws.com/postgres
+DB_USERNAME= VenusAdmin
+DB_PASSWORD= Venus7#$RR6754
+SERVER_PORT= 8080

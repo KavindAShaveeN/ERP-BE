@@ -20,4 +20,6 @@ public class LoginResponse {
     private UUID sessionId;
     // Cash managers can see every cash account; other employees only their own petty cash.
     private boolean cashManager;
+    // Bearer token for every other API call (Authorization: Bearer <token>).
+    private String token;
 }

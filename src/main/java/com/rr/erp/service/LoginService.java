@@ -7,6 +7,7 @@ import com.rr.erp.dto.LoginResponse;
 import com.rr.erp.dto.RegisterCredentialRequest;
 import com.rr.erp.entity.Credential;
 import com.rr.erp.repository.LoginRepository;
+import com.rr.erp.security.JwtService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,11 +20,14 @@ public class LoginService {
 
     private final LoginRepository loginRepository;
     private final LoginHistoryService loginHistoryService;
+    private final JwtService jwtService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public LoginService(LoginRepository loginRepository, LoginHistoryService loginHistoryService) {
+    public LoginService(LoginRepository loginRepository, LoginHistoryService loginHistoryService,
+                        JwtService jwtService) {
         this.loginRepository = loginRepository;
         this.loginHistoryService = loginHistoryService;
+        this.jwtService = jwtService;
     }
 
 
@@ -67,7 +71,8 @@ public class LoginService {
                         employeeName,
                         assignedProjects,
                         sessionId,
-                        loginRepository.isCashManager(employeeCode)
+                        loginRepository.isCashManager(employeeCode),
+                        jwtService.issue(employeeCode)
                 );
 
         return Optional.of(response);

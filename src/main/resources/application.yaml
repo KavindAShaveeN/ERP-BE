@@ -27,3 +27,11 @@ spring:
     properties:
       # Don't open a DB connection at startup just to read metadata; the dialect is set above
       hibernate.boot.allow_jdbc_metadata_access: false
+
+security:
+  # false leaves every endpoint open (deployment window only)
+  enforce: ${SECURITY_ENFORCE:true}
+  jwt:
+    # Set JWT_SECRET (32+ characters) per environment
+    secret: ${JWT_SECRET}
+    expiry-hours: ${JWT_EXPIRY_HOURS:12}

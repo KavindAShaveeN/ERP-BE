@@ -128,6 +128,7 @@ public class MRRepository {
                 mr.getIsApproved()
         );
 
+        mr.setMrId(mrId);
         insertItems(mrId, mr.getItems());
 
         return mr;
@@ -326,6 +327,24 @@ public class MRRepository {
                 mr.getIsApproved(),
                 mrId
         );
+    }
+
+    /** Final approval: the document becomes visible to the destination project. */
+    public void markApproved(UUID mrId, String approver) {
+        jdbcTemplate.update("""
+                UPDATE mr SET is_approved = TRUE, approved_by = ?, approved_date = now(),
+                              checked_by = COALESCE(checked_by, ?), checked_date = COALESCE(checked_date, now())
+                WHERE mr_id = ?
+                """, approver, approver, mrId);
+    }
+
+    /** Rejected: checked but not approved (how the frontend recognises a rejected MR). */
+    public void markRejected(UUID mrId, String rejectedBy) {
+        jdbcTemplate.update("""
+                UPDATE mr SET is_approved = FALSE, approved_by = NULL, approved_date = NULL,
+                              checked_by = ?, checked_date = now()
+                WHERE mr_id = ?
+                """, rejectedBy, mrId);
     }
 
     public void deleteItemsByMrId(UUID mrId) {

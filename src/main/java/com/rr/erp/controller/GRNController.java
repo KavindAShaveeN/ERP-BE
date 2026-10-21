@@ -87,6 +87,12 @@ public class GRNController {
         return ResponseEntity.noContent().build();
     }
 
+    // POST /api/grn/{grnId}/submit — Draft -> Requested
+    @PostMapping("/{grnId}/submit")
+    public ResponseEntity<GRN> submitGRN(@PathVariable UUID grnId) {
+        return ResponseEntity.ok(grnService.submitGRN(grnId));
+    }
+
     @PutMapping("/{grnId}")
     public ResponseEntity<GRN> updateGRN(
             @PathVariable UUID grnId,

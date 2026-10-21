@@ -32,6 +32,9 @@ public class GIN {
     private String approvedBy;
     private LocalDateTime approvedDate;
     private Boolean isAuthorized;
+
+    // Set once the GIN is sent to the approval engine (Draft -> Requested); owned by the server.
+    private Boolean isSubmitted;
     private LocalDate expectedReturnDate;
     private String receiverName;
     private String receiverNIC;

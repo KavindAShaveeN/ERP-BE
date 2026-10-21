@@ -549,6 +549,24 @@ public class PORepository {
         return results.isEmpty() ? null : results.get(0);
     }
 
+    /** Draft -> Requested (PENDING). */
+    public int markSubmitted(UUID poId) {
+        return jdbcTemplate.update("UPDATE po SET approval_status = 'PENDING' WHERE po_id = ?", poId);
+    }
+
+    public int markApproved(UUID poId, String approver) {
+        return jdbcTemplate.update(
+                "UPDATE po SET approval_status = 'APPROVED', is_approved = TRUE, approved_by = ?, approved_date = CURRENT_TIMESTAMP WHERE po_id = ?",
+                approver, poId);
+    }
+
+    /** A rejected PO: the rejector is recorded as approved_by while is_approved stays false. */
+    public int markRejected(UUID poId, String rejectedBy) {
+        return jdbcTemplate.update(
+                "UPDATE po SET approval_status = 'REJECTED', is_approved = FALSE, approved_by = ?, approved_date = CURRENT_TIMESTAMP WHERE po_id = ?",
+                rejectedBy, poId);
+    }
+
     public int deletePOItems(UUID poId) {
 
         String sql = """

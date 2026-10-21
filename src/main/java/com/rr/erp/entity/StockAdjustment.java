@@ -26,6 +26,9 @@ public class StockAdjustment {
 
     private Boolean isApproved;
 
+    // Set once the adjustment is sent to the approval engine (Draft -> Requested); owned by the server.
+    private Boolean isSubmitted;
+
     private String remarks;
 
     private List<StockAdjustmentItem> items;

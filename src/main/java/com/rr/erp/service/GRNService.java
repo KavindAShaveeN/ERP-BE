@@ -14,6 +14,7 @@ import com.rr.erp.repository.ReceivedServiceRepository;
 import com.rr.erp.repository.ServiceItemRepository;
 import com.rr.erp.repository.ThreePServiceRepository;
 import com.rr.erp.repository.StockReturnRepository;
+import com.rr.erp.security.SecurityUtil;
 import com.rr.erp.util.DimensionalItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -49,6 +51,9 @@ public class GRNService {
     private final ReceivedServiceRepository receivedServiceRepository;
     private final TransportService transportService;
     private final ThreePServiceRepository threePServiceRepository;
+    private final ApprovalService approvalService;
+
+    static final String DOC_TYPE = "GRN";
 
     public GRNService(
             GRNRepository grnRepository,
@@ -62,7 +67,8 @@ public class GRNService {
             ServiceItemRepository serviceItemRepository,
             ReceivedServiceRepository receivedServiceRepository,
             TransportService transportService,
-            ThreePServiceRepository threePServiceRepository
+            ThreePServiceRepository threePServiceRepository,
+            ApprovalService approvalService
     ) {
         this.grnRepository = grnRepository;
         this.poRepository = poRepository;
@@ -76,6 +82,7 @@ public class GRNService {
         this.receivedServiceRepository = receivedServiceRepository;
         this.transportService = transportService;
         this.threePServiceRepository = threePServiceRepository;
+        this.approvalService = approvalService;
     }
 
     @Transactional
@@ -89,6 +96,12 @@ public class GRNService {
             transportService.prepareReceipt(grn.getGinId(), vehicle, grn.getCheckedBy(),
                     "GRN " + (grn.getGrnCode() != null ? grn.getGrnCode() : ""));
         }
+
+        // A new GRN is always a Draft; approval is owned by the approval engine.
+        grn.setIsApproved(false);
+        grn.setIsSubmitted(false);
+        grn.setApprovedBy(null);
+        grn.setApprovedDate(null);
 
         validateGRN(grn);
         applyPoUomConversions(grn);
@@ -195,6 +208,7 @@ public class GRNService {
 
         try {
             assetPackService.deleteSelections(AssetPackService.DOC_GRN, grnId);
+            approvalService.deleteForDocument(DOC_TYPE, grnId);
             grnRepository.deleteById(grnId);
         } catch (org.springframework.dao.DataIntegrityViolationException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -220,6 +234,73 @@ public class GRNService {
                     "GRN " + grnId + " has already been approved and can no longer be edited."
             );
         }
+
+        // Only a Draft can be edited; once submitted it waits in the approvers' inbox.
+        if (Boolean.TRUE.equals(existing.getIsSubmitted())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "GRN " + grnId + " has been submitted for approval and can no longer be edited."
+            );
+        }
+
+        // Approval is decided by the approval engine, never by the edit payload.
+        grn.setIsApproved(false);
+        grn.setApprovedBy(null);
+        grn.setApprovedDate(null);
+
+        return saveUpdate(grnId, grn);
+    }
+
+    /** Draft -> Requested: sends the GRN to the approval engine (it then shows in "My approvals"). */
+    @Transactional
+    public GRN submitGRN(UUID grnId) {
+
+        GRN existing = grnRepository.findById(grnId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "GRN not found: " + grnId));
+
+        if (Boolean.TRUE.equals(existing.getIsApproved()) || Boolean.TRUE.equals(existing.getIsSubmitted())
+                || existing.getCheckedBy() != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This GRN has already been submitted.");
+        }
+        if (existing.getItems() == null || existing.getItems().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Add at least one item before submitting.");
+        }
+
+        // Marked first: with no approval step configured, submit() approves straight away and
+        // the approval callback expects the GRN to be in its submitted state.
+        grnRepository.markSubmitted(grnId);
+        approvalService.submit(DOC_TYPE, grnId, existing.getFromProjectCode(), existing.getToProjectCode(),
+                SecurityUtil.currentEmployeeCode(), Map.of());
+
+        return grnRepository.findById(grnId).orElse(existing);
+    }
+
+    /** Called by the approval engine when the last approver approves: this is the moment stock is credited. */
+    @Transactional
+    public void approveFromWorkflow(UUID grnId, String approver) {
+
+        GRN existing = grnRepository.findById(grnId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "GRN not found: " + grnId));
+
+        // No approver means the workflow had no applicable step; the submitter stands in.
+        String by = approver != null ? approver : SecurityUtil.currentEmployeeCodeOrNull();
+
+        existing.setCheckedBy(by);
+        existing.setCheckedDate(java.time.LocalDateTime.now());
+        existing.setApprovedBy(by);
+        existing.setApprovedDate(java.time.LocalDateTime.now());
+        existing.setIsApproved(true);
+
+        saveUpdate(grnId, existing);
+    }
+
+    /** Called by the approval engine on a rejection; stock is untouched. */
+    @Transactional
+    public void rejectFromWorkflow(UUID grnId, String rejectedBy) {
+        grnRepository.markRejected(grnId, rejectedBy);
+    }
+
+    private GRN saveUpdate(UUID grnId, GRN grn) {
 
         validateGRN(grn);
         applyPoUomConversions(grn);

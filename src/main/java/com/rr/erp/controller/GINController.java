@@ -118,6 +118,12 @@ public class GINController {
         );
     }
 
+    // POST /api/gin/{ginId}/submit — Draft -> Requested
+    @PostMapping("/{ginId}/submit")
+    public ResponseEntity<GIN> submitGin(@PathVariable UUID ginId) {
+        return ResponseEntity.ok(ginService.submitGin(ginId));
+    }
+
     // PUT /api/gin/{ginId}/gate-verify-arrival?gateVerifiedBy=NAME
     @PutMapping("/{ginId}/gate-verify-arrival")
     public ResponseEntity<GIN> verifyGinArrivalAtGate(

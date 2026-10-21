@@ -6,6 +6,7 @@ import com.rr.erp.entity.POItem;
 import com.rr.erp.repository.POMaterialRequestRepository;
 import com.rr.erp.repository.PORepository;
 import com.rr.erp.repository.ThreePServiceRepository;
+import com.rr.erp.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,9 @@ public class POService {
     private final PORepository repository;
     private final POMaterialRequestRepository poMaterialRequestRepository;
     private final ThreePServiceRepository threePServiceRepository;
+    private final ApprovalService approvalService;
+
+    static final String DOC_TYPE = "PO";
 
 
     @Transactional
@@ -34,13 +38,11 @@ public class POService {
 
         po.setPoId(poId);
 
-        if (po.getIsApproved() == null) {
-            po.setIsApproved(false);
-        }
-
-        if (po.getApprovalStatus() == null) {
-            po.setApprovalStatus(Boolean.TRUE.equals(po.getIsApproved()) ? "APPROVED" : "PENDING");
-        }
+        // A new PO is always a Draft; approval is owned by the approval engine.
+        po.setIsApproved(false);
+        po.setApprovalStatus("DRAFT");
+        po.setApprovedBy(null);
+        po.setApprovedDate(null);
 
         if (po.getStatus() == null) {
             po.setStatus("ACTIVE");
@@ -289,6 +291,24 @@ public class POService {
             PO po
     ) {
 
+        PO existing = repository.findById(poId);
+        if (existing == null) {
+            throw new RuntimeException("Purchase Order not found: " + poId);
+        }
+
+        // Once submitted, the content is frozen for the approvers; only a status change (hold / cancel / reactivate) may pass.
+        if ("PENDING".equals(existing.getApprovalStatus())
+                && java.util.Objects.equals(existing.getStatus(), po.getStatus())) {
+            throw new RuntimeException("Purchase Order " + existing.getPoCode()
+                    + " has been submitted for approval and can no longer be edited.");
+        }
+
+        // Approval is decided by the approval engine, never by the edit payload.
+        po.setIsApproved(existing.getIsApproved());
+        po.setApprovalStatus(existing.getApprovalStatus());
+        po.setApprovedBy(existing.getApprovedBy());
+        po.setApprovedDate(existing.getApprovedDate());
+
         applyTaxDefaults(po);
 
         int updated =
@@ -344,5 +364,48 @@ public class POService {
         recalculateTotals(poId);
 
         return findByIdWithItems(poId);
+    }
+
+
+    /** Draft -> Requested: sends the PO to the approval engine (it then shows in "My approvals"). */
+    @Transactional
+    public PO submitPO(UUID poId) {
+
+        PO existing = repository.findById(poId);
+        if (existing == null) {
+            throw new RuntimeException("Purchase Order not found: " + poId);
+        }
+        if (!"DRAFT".equals(existing.getApprovalStatus())) {
+            throw new RuntimeException("This purchase order has already been submitted.");
+        }
+        if (!"ACTIVE".equals(existing.getStatus())) {
+            throw new RuntimeException("Only an active purchase order can be submitted for approval.");
+        }
+        if (repository.getPOItems(poId).isEmpty()) {
+            throw new RuntimeException("Add at least one item before submitting.");
+        }
+
+        String requestingProject = existing.getBillToProjectCode() != null
+                ? existing.getBillToProjectCode() : existing.getProjectCode();
+
+        // Marked first: with no approval step configured, submit() approves straight away and
+        // the approval callback expects the PO to be in its submitted state.
+        repository.markSubmitted(poId);
+        approvalService.submit(DOC_TYPE, poId, requestingProject, existing.getProjectCode(),
+                SecurityUtil.currentEmployeeCode(), Map.of());
+
+        return findByIdWithItems(poId);
+    }
+
+    /** Called by the approval engine when the last approver approves. */
+    @Transactional
+    public void approveFromWorkflow(UUID poId, String approver) {
+        repository.markApproved(poId, approver != null ? approver : SecurityUtil.currentEmployeeCodeOrNull());
+    }
+
+    /** Called by the approval engine on a rejection. */
+    @Transactional
+    public void rejectFromWorkflow(UUID poId, String rejectedBy) {
+        repository.markRejected(poId, rejectedBy);
     }
 }

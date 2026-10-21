@@ -138,6 +138,9 @@ public class StockAdjustmentRepository {
                         result.setRemarks(
                                 rs.getString("remarks")
                         );
+                        result.setIsSubmitted(
+                                rs.getBoolean("is_submitted")
+                        );
 
                         return result;
                     },
@@ -217,6 +220,10 @@ public class StockAdjustmentRepository {
 
                     adjustment.setRemarks(
                             rs.getString("remarks")
+                    );
+
+                    adjustment.setIsSubmitted(
+                            rs.getBoolean("is_submitted")
                     );
 
                     return adjustment;
@@ -303,6 +310,10 @@ public class StockAdjustmentRepository {
 
                     adjustment.setRemarks(
                             rs.getString("remarks")
+                    );
+
+                    adjustment.setIsSubmitted(
+                            rs.getBoolean("is_submitted")
                     );
 
                     return adjustment;
@@ -436,6 +447,21 @@ public class StockAdjustmentRepository {
         );
     }
 
+
+    /** Draft -> Requested. */
+    public int markSubmitted(UUID stockAdjustmentId) {
+        return jdbcTemplate.update(
+                "UPDATE stock_adjustment SET is_submitted = TRUE WHERE stock_adjustment_id = ?", stockAdjustmentId);
+    }
+
+    /** A rejected adjustment: the rejector is recorded as approved_by while is_approved stays false. */
+    public int markRejected(UUID stockAdjustmentId, String rejectedBy) {
+        return jdbcTemplate.update("""
+                UPDATE stock_adjustment
+                SET approved_by = ?, approved_date = CURRENT_TIMESTAMP, is_approved = FALSE
+                WHERE stock_adjustment_id = ?
+                """, rejectedBy, stockAdjustmentId);
+    }
 
     /** Deletes the adjustment; its items cascade. */
     public int deleteById(UUID stockAdjustmentId) {

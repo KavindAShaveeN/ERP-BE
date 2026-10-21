@@ -47,6 +47,7 @@ public class GINRepository {
         gin.setApprovedDate(approvedDate != null ? approvedDate.toLocalDateTime() : null);
 
         gin.setIsAuthorized(rs.getObject("is_authorized", Boolean.class));
+        gin.setIsSubmitted(rs.getBoolean("is_submitted"));
 
         Date expectedReturnDate = rs.getDate("expected_return_date");
         gin.setExpectedReturnDate(expectedReturnDate != null ? expectedReturnDate.toLocalDate() : null);
@@ -91,6 +92,7 @@ public class GINRepository {
                     approved_by,
                     approved_date,
                     is_authorized,
+                    is_submitted,
                     expected_return_date,
                     receiver_name,
                     receiver_nic,
@@ -162,6 +164,8 @@ public class GINRepository {
                     gin.setIsAuthorized(
                             rs.getObject("is_authorized", Boolean.class)
                     );
+
+                    gin.setIsSubmitted(rs.getBoolean("is_submitted"));
                     Date expectedReturnDate = rs.getDate("expected_return_date");
                     gin.setExpectedReturnDate(
                             expectedReturnDate != null ? expectedReturnDate.toLocalDate() : null
@@ -253,6 +257,7 @@ public class GINRepository {
                     approved_by,
                     approved_date,
                     is_authorized,
+                    is_submitted,
                     expected_return_date,
                     receiver_name,
                     receiver_nic,
@@ -266,6 +271,7 @@ public class GINRepository {
                     is_arrival_gate_verified
                 FROM gin
                 WHERE received_project_code = ?
+                  AND is_submitted
                 ORDER BY issued_date DESC
                 LIMIT ? OFFSET ?
                 """;
@@ -324,6 +330,8 @@ public class GINRepository {
                     gin.setIsAuthorized(
                             rs.getObject("is_authorized", Boolean.class)
                     );
+
+                    gin.setIsSubmitted(rs.getBoolean("is_submitted"));
                     Date expectedReturnDate = rs.getDate("expected_return_date");
                     gin.setExpectedReturnDate(
                             expectedReturnDate != null ? expectedReturnDate.toLocalDate() : null
@@ -388,6 +396,7 @@ public class GINRepository {
                 SELECT COUNT(*)
                 FROM gin
                 WHERE received_project_code = ?
+                  AND is_submitted
                 """;
 
         Long count = jdbcTemplate.queryForObject(sql, Long.class, receivedProjectCode);
@@ -415,6 +424,7 @@ public class GINRepository {
                     approved_by,
                     approved_date,
                     is_authorized,
+                    is_submitted,
                     expected_return_date,
                     receiver_name,
                     receiver_nic,
@@ -485,6 +495,8 @@ public class GINRepository {
                     gin.setIsAuthorized(
                             rs.getObject("is_authorized", Boolean.class)
                     );
+
+                    gin.setIsSubmitted(rs.getBoolean("is_submitted"));
                     Date expectedReturnDate = rs.getDate("expected_return_date");
                     gin.setExpectedReturnDate(
                             expectedReturnDate != null ? expectedReturnDate.toLocalDate() : null
@@ -574,6 +586,7 @@ public class GINRepository {
                     approved_by,
                     approved_date,
                     is_authorized,
+                    is_submitted,
                     expected_return_date,
                     receiver_name,
                     receiver_nic,
@@ -619,6 +632,7 @@ public class GINRepository {
                     );
 
                     gin.setIsAuthorized(rs.getObject("is_authorized", Boolean.class));
+        gin.setIsSubmitted(rs.getBoolean("is_submitted"));
 
                     Date expectedReturnDate = rs.getDate("expected_return_date");
                     gin.setExpectedReturnDate(
@@ -979,7 +993,7 @@ public class GINRepository {
         String sql = """
                 SELECT gin_id, gin_code, gin_type_id, issued_date, issued_project_code,
                        received_project_code, received_by, vehicle_no, vehicle_asset_code,
-                       for_asset_code, issued_by, approved_by, approved_date, is_authorized, expected_return_date,
+                       for_asset_code, issued_by, approved_by, approved_date, is_authorized, is_submitted, expected_return_date,
                        receiver_name, receiver_nic, sub_contractor_id, mr_id,
                        gate_verified_by, gate_verified_date, is_gate_verified,
                        arrival_gate_verified_by, arrival_gate_verified_date, is_arrival_gate_verified
@@ -1004,7 +1018,7 @@ public class GINRepository {
         String sql = """
                 SELECT gin_id, gin_code, gin_type_id, issued_date, issued_project_code,
                        received_project_code, received_by, vehicle_no, vehicle_asset_code,
-                       for_asset_code, issued_by, approved_by, approved_date, is_authorized, expected_return_date,
+                       for_asset_code, issued_by, approved_by, approved_date, is_authorized, is_submitted, expected_return_date,
                        receiver_name, receiver_nic, sub_contractor_id, mr_id,
                        gate_verified_by, gate_verified_date, is_gate_verified,
                        arrival_gate_verified_by, arrival_gate_verified_date, is_arrival_gate_verified
@@ -1034,7 +1048,7 @@ public class GINRepository {
         String sql = """
                 SELECT gin_id, gin_code, gin_type_id, issued_date, issued_project_code,
                        received_project_code, received_by, vehicle_no, vehicle_asset_code,
-                       for_asset_code, issued_by, approved_by, approved_date, is_authorized, expected_return_date,
+                       for_asset_code, issued_by, approved_by, approved_date, is_authorized, is_submitted, expected_return_date,
                        receiver_name, receiver_nic, sub_contractor_id, mr_id,
                        gate_verified_by, gate_verified_date, is_gate_verified,
                        arrival_gate_verified_by, arrival_gate_verified_date, is_arrival_gate_verified
@@ -1070,7 +1084,7 @@ public class GINRepository {
         String sql = """
                 SELECT gin_id, gin_code, gin_type_id, issued_date, issued_project_code,
                        received_project_code, received_by, vehicle_no, vehicle_asset_code,
-                       for_asset_code, issued_by, approved_by, approved_date, is_authorized, expected_return_date,
+                       for_asset_code, issued_by, approved_by, approved_date, is_authorized, is_submitted, expected_return_date,
                        receiver_name, receiver_nic, sub_contractor_id, mr_id,
                        gate_verified_by, gate_verified_date, is_gate_verified,
                        arrival_gate_verified_by, arrival_gate_verified_date, is_arrival_gate_verified
@@ -1105,6 +1119,18 @@ public class GINRepository {
     // =========================
 
     /** Deletes the GIN; its items cascade. */
+    /** Draft -> Requested. */
+    public int markSubmitted(UUID ginId) {
+        return jdbcTemplate.update("UPDATE gin SET is_submitted = TRUE WHERE gin_id = ?", ginId);
+    }
+
+    /** A rejected GIN: the rejector is recorded as approved_by while is_authorized stays false. */
+    public int markRejected(UUID ginId, String rejectedBy) {
+        return jdbcTemplate.update(
+                "UPDATE gin SET approved_by = ?, approved_date = CURRENT_TIMESTAMP, is_authorized = FALSE WHERE gin_id = ?",
+                rejectedBy, ginId);
+    }
+
     public int deleteById(UUID ginId) {
         return jdbcTemplate.update("DELETE FROM gin WHERE gin_id = ?", ginId);
     }

@@ -192,6 +192,7 @@ public class StockReturnRepository {
                 SELECT *
                 FROM stock_return
                 WHERE to_project_code = ?
+                  AND is_submitted
                 ORDER BY return_date DESC
                 LIMIT ? OFFSET ?
                 """;
@@ -211,6 +212,7 @@ public class StockReturnRepository {
                 SELECT COUNT(*)
                 FROM stock_return
                 WHERE to_project_code = ?
+                  AND is_submitted
                 """;
 
         Long count = jdbcTemplate.queryForObject(sql, Long.class, toProjectCode);
@@ -409,6 +411,20 @@ public class StockReturnRepository {
         return jdbcTemplate.update(sql, gateVerifiedBy, gateVerifiedDate, stockReturnId);
     }
 
+    /** Draft -> Requested. */
+    public int markSubmitted(UUID stockReturnId) {
+        return jdbcTemplate.update("UPDATE stock_return SET is_submitted = TRUE WHERE stock_return_id = ?", stockReturnId);
+    }
+
+    /** A rejected return: the rejector is recorded as approved_by while is_approved stays false. */
+    public int markRejected(UUID stockReturnId, String rejectedBy) {
+        return jdbcTemplate.update("""
+                UPDATE stock_return
+                SET approved_by = ?, approved_date = CURRENT_TIMESTAMP, is_approved = FALSE
+                WHERE stock_return_id = ?
+                """, rejectedBy, stockReturnId);
+    }
+
     /** Deletes the return; its items cascade. */
     public int deleteById(UUID stockReturnId) {
         return jdbcTemplate.update("DELETE FROM stock_return WHERE stock_return_id = ?", stockReturnId);
@@ -534,6 +550,7 @@ public class StockReturnRepository {
                 (Boolean) rs.getObject("is_arrival_gate_verified")
         );
 
+        stockReturn.setIsSubmitted(rs.getBoolean("is_submitted"));
         stockReturn.setReceivedBy(rs.getString("received_by"));
         stockReturn.setVehicleAssetCode(rs.getString("vehicle_asset_code"));
         stockReturn.setVehicleNo(rs.getString("vehicle_no"));

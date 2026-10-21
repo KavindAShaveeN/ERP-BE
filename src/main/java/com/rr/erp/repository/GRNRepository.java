@@ -50,6 +50,7 @@ public class GRNRepository {
         grn.setIsApproved(
                 (Boolean) rs.getObject("is_approved")
         );
+        grn.setIsSubmitted(rs.getBoolean("is_submitted"));
         grn.setGinId(rs.getObject("gin_id", UUID.class));
         grn.setStockReturnId(rs.getObject("stock_return_id", UUID.class));
         grn.setVehicleAssetCode(rs.getString("vehicle_asset_code"));
@@ -517,6 +518,18 @@ public class GRNRepository {
                 grn.getIsGateVerified(),
                 grnId
         );
+    }
+
+    /** Draft -> Requested. */
+    public int markSubmitted(UUID grnId) {
+        return jdbcTemplate.update("UPDATE grn SET is_submitted = TRUE WHERE grn_id = ?", grnId);
+    }
+
+    /** A rejected GRN: the rejector is recorded as checked_by while is_approved stays false. */
+    public int markRejected(UUID grnId, String rejectedBy) {
+        return jdbcTemplate.update(
+                "UPDATE grn SET checked_by = ?, checked_date = CURRENT_TIMESTAMP, is_approved = FALSE WHERE grn_id = ?",
+                rejectedBy, grnId);
     }
 
     /** Deletes the GRN; its items cascade. */

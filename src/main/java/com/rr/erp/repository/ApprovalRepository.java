@@ -196,10 +196,19 @@ public class ApprovalRepository {
 
     /** The human-readable code of a document (MR code), when the type has one. */
     public java.util.Optional<String> findDocCode(String docType, UUID docId) {
-        if (!"MR".equals(docType)) {
+        String sql = switch (docType) {
+            case "MR" -> "SELECT mr_code FROM mr WHERE mr_id = ?";
+            case "ADJ" -> "SELECT stock_adjustment_code FROM stock_adjustment WHERE stock_adjustment_id = ?";
+            case "RET" -> "SELECT stock_return_code FROM stock_return WHERE stock_return_id = ?";
+            case "PO" -> "SELECT po_code FROM po WHERE po_id = ?";
+            case "GIN" -> "SELECT gin_code FROM gin WHERE gin_id = ?";
+            case "GRN" -> "SELECT grn_code FROM grn WHERE grn_id = ?";
+            default -> null;
+        };
+        if (sql == null) {
             return java.util.Optional.empty();
         }
-        return jdbc.queryForList("SELECT mr_code FROM mr WHERE mr_id = ?", String.class, docId).stream().findFirst();
+        return jdbc.queryForList(sql, String.class, docId).stream().findFirst();
     }
 
     public java.util.Optional<String> findEmployeeName(String employeeCode) {

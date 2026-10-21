@@ -33,6 +33,18 @@ public class ThreePService {
 
     private String serviceProviderName;
 
+    /** supplier.suppliercode of the provider; set when issued DIRECT or from the service PO's supplier. */
+    private String serviceProviderCode;
+
+    /** Rows saved in one batch share this id (one purchasing request). */
+    private UUID requestGroupId;
+
+    /** DIRECT (issued straight to the provider) or PURCHASING (requested via the purchasing department). */
+    private String issueMode;
+
+    /** What service is needed on this item. */
+    private String description;
+
     private LocalDateTime receivedDate;
 
     private String remarks;
@@ -45,4 +57,10 @@ public class ThreePService {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    /** Read-only - joined from job_card. */
+    private String jobCardCode;
+
+    /** Read-only - joined from job_card. */
+    private String projectCode;
 }

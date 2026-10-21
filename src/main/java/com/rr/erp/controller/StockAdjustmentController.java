@@ -75,6 +75,12 @@ public class StockAdjustmentController {
 
 
 
+    // POST /api/adjustment/{id}/submit — Draft -> Requested
+    @PostMapping("/{stockAdjustmentId}/submit")
+    public ResponseEntity<StockAdjustment> submitStockAdjustment(@PathVariable UUID stockAdjustmentId) {
+        return ResponseEntity.ok(service.submitStockAdjustment(stockAdjustmentId));
+    }
+
     @PutMapping("/{stockAdjustmentId}")
     public ResponseEntity<StockAdjustment>
     updateStockAdjustment(

@@ -6,6 +6,7 @@ import com.rr.erp.entity.StockReturn;
 import com.rr.erp.entity.StockReturnItem;
 import com.rr.erp.repository.GRNRepository;
 import com.rr.erp.repository.StockReturnRepository;
+import com.rr.erp.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,6 +28,9 @@ public class StockReturnService {
     private final AssetLocationService assetLocationService;
     private final AssetService assetService;
     private final AssetPackService assetPackService;
+    private final ApprovalService approvalService;
+
+    static final String DOC_TYPE = "RET";
 
 
     // POST
@@ -38,9 +43,11 @@ public class StockReturnService {
 
         stockReturn.setStockReturnId(stockReturnId);
 
-        if (stockReturn.getIsApproved() == null) {
-            stockReturn.setIsApproved(false);
-        }
+        // A new return is always a Draft; approval is owned by the approval engine.
+        stockReturn.setIsApproved(false);
+        stockReturn.setIsSubmitted(false);
+        stockReturn.setApprovedBy(null);
+        stockReturn.setApprovedDate(null);
 
         if (stockReturn.getIsGateVerified() == null) {
             stockReturn.setIsGateVerified(false);
@@ -102,6 +109,7 @@ public class StockReturnService {
 
         try {
             assetPackService.deleteSelections(AssetPackService.DOC_STOCK_RETURN, stockReturnId);
+            approvalService.deleteForDocument(DOC_TYPE, stockReturnId);
             repository.deleteById(stockReturnId);
         } catch (org.springframework.dao.DataIntegrityViolationException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -225,6 +233,74 @@ public class StockReturnService {
                             + " has already been approved and can no longer be edited."
             );
         }
+
+        // Only a Draft can be edited; once submitted it waits in the approvers' inbox.
+        if (Boolean.TRUE.equals(existing.getIsSubmitted())) {
+            throw new RuntimeException(
+                    "Stock return " + stockReturnId + " has been submitted for approval and can no longer be edited."
+            );
+        }
+
+        // Approval is decided by the approval engine, never by the edit payload.
+        stockReturn.setIsApproved(false);
+        stockReturn.setApprovedBy(null);
+        stockReturn.setApprovedDate(null);
+
+        return saveUpdate(stockReturnId, stockReturn);
+    }
+
+    /** Draft -> Requested: sends the return to the approval engine (it then shows in "My approvals"). */
+    @Transactional
+    public StockReturn submitStockReturn(UUID stockReturnId) {
+
+        StockReturn existing = repository.findById(stockReturnId)
+                .orElseThrow(() -> new RuntimeException("Stock return not found: " + stockReturnId));
+
+        if (Boolean.TRUE.equals(existing.getIsApproved()) || Boolean.TRUE.equals(existing.getIsSubmitted())
+                || existing.getApprovedBy() != null) {
+            throw new RuntimeException("This stock return has already been submitted.");
+        }
+        if (repository.getItems(stockReturnId).isEmpty()) {
+            throw new RuntimeException("Add at least one item before submitting.");
+        }
+
+        // Marked first: with no approval step configured, submit() approves straight away and
+        // the approval callback expects the return to be in its submitted state.
+        repository.markSubmitted(stockReturnId);
+        approvalService.submit(DOC_TYPE, stockReturnId, existing.getFromProjectCode(), existing.getToProjectCode(),
+                SecurityUtil.currentEmployeeCode(), Map.of());
+
+        return repository.findById(stockReturnId).orElse(existing);
+    }
+
+    /** Called by the approval engine when the last approver approves: this is the moment stock moves. */
+    @Transactional
+    public void approveFromWorkflow(UUID stockReturnId, String approver) {
+
+        StockReturn existing = repository.findById(stockReturnId)
+                .orElseThrow(() -> new RuntimeException("Stock return not found: " + stockReturnId));
+
+        // No approver means the workflow had no applicable step; the submitter stands in.
+        String by = approver != null ? approver : SecurityUtil.currentEmployeeCodeOrNull();
+
+        existing.setItems(repository.getItems(stockReturnId));
+        existing.setApprovedBy(by);
+        existing.setApprovedDate(java.time.LocalDateTime.now());
+        existing.setIsApproved(true);
+
+        saveUpdate(stockReturnId, existing);
+    }
+
+    /** Called by the approval engine on a rejection; stock is untouched. */
+    @Transactional
+    public void rejectFromWorkflow(UUID stockReturnId, String rejectedBy) {
+        repository.markRejected(stockReturnId, rejectedBy);
+    }
+
+    private StockReturn saveUpdate(
+            UUID stockReturnId,
+            StockReturn stockReturn
+    ) {
 
         validateReturnType(stockReturn);
 

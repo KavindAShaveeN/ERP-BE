@@ -84,6 +84,12 @@ public class StockReturnController {
     }
 
 
+    // POST /api/return/{stockReturnId}/submit — Draft -> Requested
+    @PostMapping("/{stockReturnId}/submit")
+    public ResponseEntity<StockReturn> submitStockReturn(@PathVariable UUID stockReturnId) {
+        return ResponseEntity.ok(service.submitStockReturn(stockReturnId));
+    }
+
     // PUT /api/return/incoming/{stockReturnId}
     @PutMapping("/incoming/{stockReturnId}")
     public ResponseEntity<StockReturn>

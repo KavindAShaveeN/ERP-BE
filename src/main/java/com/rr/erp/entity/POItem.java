@@ -22,4 +22,7 @@ public class POItem {
 
     private BigDecimal unitPrice;
     private BigDecimal amount;
+
+    /** Not a column — the job card 3P service row this line is billing (service POs only). */
+    private UUID threePServiceId;
 }

@@ -7,12 +7,14 @@ import com.rr.erp.entity.GIN;
 import com.rr.erp.entity.GINItem;
 import com.rr.erp.repository.GINRepository;
 import com.rr.erp.repository.GRNRepository;
+import com.rr.erp.security.SecurityUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,6 +28,9 @@ public class GINService {
     private final TransportService transportService;
     private final AssetPackService assetPackService;
     private final IssuePlanningService issuePlanningService;
+    private final ApprovalService approvalService;
+
+    static final String DOC_TYPE = "GIN";
 
     public GINService(
             GINRepository ginRepository,
@@ -35,7 +40,8 @@ public class GINService {
             AssetPackService assetPackService,
             IssuePlanningService issuePlanningService,
             TransportRepository transportRepository,
-            TransportService transportService
+            TransportService transportService,
+            ApprovalService approvalService
     ) {
         this.ginRepository = ginRepository;
         this.grnRepository = grnRepository;
@@ -45,6 +51,7 @@ public class GINService {
         this.issuePlanningService = issuePlanningService;
         this.transportRepository = transportRepository;
         this.transportService = transportService;
+        this.approvalService = approvalService;
     }
 
     public PagedResponse<GIN> getCreatedGin(String issuedProjectCode, int page, int size) {
@@ -107,10 +114,11 @@ public class GINService {
         UUID ginId = UUID.randomUUID();
         gin.setGinId(ginId);
 
-        // Default authorization status
-        if (gin.getIsAuthorized() == null) {
-            gin.setIsAuthorized(false);
-        }
+        // A new GIN is always a Draft; authorization is owned by the approval engine.
+        gin.setIsAuthorized(false);
+        gin.setIsSubmitted(false);
+        gin.setApprovedBy(null);
+        gin.setApprovedDate(null);
 
         // Default gate verification status
         if (gin.getIsGateVerified() == null) {
@@ -160,8 +168,6 @@ public class GINService {
                         "GIN not found: " + ginId
                 ));
 
-        issuePlanningService.validateMrLines(gin);
-
         // Once authorized, a GIN's stock has already been deducted and it is no longer
         // editable (see WarehouseGinFormPage.tsx, which blocks editing once isAuthorized is
         // true) — enforced here too so nothing can re-deduct stock for it a second time.
@@ -171,6 +177,71 @@ public class GINService {
                     "GIN " + ginId + " has already been authorized and can no longer be edited."
             );
         }
+
+        // Only a Draft can be edited; once submitted it waits in the approvers' inbox.
+        if (Boolean.TRUE.equals(existing.getIsSubmitted())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "GIN " + ginId + " has been submitted for approval and can no longer be edited."
+            );
+        }
+
+        // Authorization is decided by the approval engine, never by the edit payload.
+        gin.setIsAuthorized(false);
+        gin.setApprovedBy(null);
+        gin.setApprovedDate(null);
+
+        return saveUpdate(ginId, gin, existing);
+    }
+
+    /** Draft -> Requested: sends the GIN to the approval engine (it then shows in "My approvals"). */
+    @Transactional
+    public GIN submitGin(UUID ginId) {
+
+        GIN existing = ginRepository.findById(ginId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "GIN not found: " + ginId));
+
+        if (Boolean.TRUE.equals(existing.getIsAuthorized()) || Boolean.TRUE.equals(existing.getIsSubmitted())
+                || existing.getApprovedBy() != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This GIN has already been submitted.");
+        }
+        if (existing.getItems() == null || existing.getItems().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Add at least one item before submitting.");
+        }
+
+        // Marked first: with no approval step configured, submit() approves straight away and
+        // the approval callback expects the GIN to be in its submitted state.
+        ginRepository.markSubmitted(ginId);
+        approvalService.submit(DOC_TYPE, ginId, existing.getIssuedProjectCode(), existing.getReceivedProjectCode(),
+                SecurityUtil.currentEmployeeCode(), Map.of());
+
+        return ginRepository.findById(ginId).orElse(existing);
+    }
+
+    /** Called by the approval engine when the last approver approves: this is the moment stock is deducted. */
+    @Transactional
+    public void approveFromWorkflow(UUID ginId, String approver) {
+
+        GIN existing = ginRepository.findById(ginId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "GIN not found: " + ginId));
+
+        // No approver means the workflow had no applicable step; the submitter stands in.
+        existing.setApprovedBy(approver != null ? approver : SecurityUtil.currentEmployeeCodeOrNull());
+        existing.setApprovedDate(java.time.LocalDateTime.now());
+        existing.setIsAuthorized(true);
+
+        saveUpdate(ginId, existing, existing);
+    }
+
+    /** Called by the approval engine on a rejection; stock is untouched. */
+    @Transactional
+    public void rejectFromWorkflow(UUID ginId, String rejectedBy) {
+        ginRepository.markRejected(ginId, rejectedBy);
+    }
+
+    private GIN saveUpdate(UUID ginId, GIN gin, GIN existing) {
+
+        issuePlanningService.validateMrLines(gin);
 
         // Carry over gate-verification state the incoming payload doesn't know about (e.g. a
         // create/edit form built before this field existed) instead of nulling it out.
@@ -237,6 +308,7 @@ public class GINService {
 
         try {
             assetPackService.deleteSelections(AssetPackService.DOC_GIN, ginId);
+            approvalService.deleteForDocument(DOC_TYPE, ginId);
             ginRepository.deleteById(ginId);
         } catch (org.springframework.dao.DataIntegrityViolationException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,

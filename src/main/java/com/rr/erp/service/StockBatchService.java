@@ -43,6 +43,7 @@ public class StockBatchService {
     public static final String SOURCE_INTRA_PROJECT_ISSUE_RETURN = "INTRA_PROJECT_ISSUE_RETURN";
     public static final String SOURCE_PLANT_PRODUCTION = "PLANT_PRODUCTION";
     public static final String SOURCE_JOB_CARD_ITEM_RETURN = "JOB_CARD_ITEM_RETURN";
+    public static final String SOURCE_JOB_CARD_OUTPUT = "JOB_CARD_OUTPUT";
     /** Pieces produced by cutting an issued dimensional-item batch and returning the offcuts. */
     public static final String SOURCE_CUT_RETURN = "CUT_RETURN";
 

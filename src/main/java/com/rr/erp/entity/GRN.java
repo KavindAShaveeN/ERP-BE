@@ -58,6 +58,9 @@ public class GRN {
 
     private Boolean isApproved = false;
 
+    // Set once the GRN is sent to the approval engine (Draft -> Requested); owned by the server.
+    private Boolean isSubmitted = false;
+
     private UUID ginId;
 
     private UUID stockReturnId;

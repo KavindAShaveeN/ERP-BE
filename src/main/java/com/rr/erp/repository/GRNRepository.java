@@ -50,6 +50,7 @@ public class GRNRepository {
         grn.setIsApproved(
                 (Boolean) rs.getObject("is_approved")
         );
+        grn.setIsSubmitted(rs.getBoolean("is_submitted"));
         grn.setGinId(rs.getObject("gin_id", UUID.class));
         grn.setStockReturnId(rs.getObject("stock_return_id", UUID.class));
         grn.setVehicleAssetCode(rs.getString("vehicle_asset_code"));
@@ -83,6 +84,7 @@ public class GRNRepository {
                     rs.getBigDecimal("width_m"),
                     rs.getString("asset_code"),
                     rs.getObject("expiry_date", java.time.LocalDate.class),
+                    rs.getString("remarks"),
                     null
             );
 
@@ -171,9 +173,10 @@ public class GRNRepository {
                     length_m,
                     width_m,
                     asset_code,
-                    expiry_date
+                    expiry_date,
+                    remarks
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         for (GRNItem item : items) {
@@ -200,7 +203,8 @@ public class GRNRepository {
                     item.getLengthM(),
                     item.getWidthM(),
                     item.getAssetCode(),
-                    item.getExpiryDate()
+                    item.getExpiryDate(),
+                    item.getRemarks()
             );
         }
     }
@@ -440,7 +444,8 @@ public class GRNRepository {
                     length_m,
                     width_m,
                     asset_code,
-                    expiry_date
+                    expiry_date,
+                    remarks
                 FROM grn_item
                 WHERE grn_id = ?
                 ORDER BY grn_item_id
@@ -513,6 +518,18 @@ public class GRNRepository {
                 grn.getIsGateVerified(),
                 grnId
         );
+    }
+
+    /** Draft -> Requested. */
+    public int markSubmitted(UUID grnId) {
+        return jdbcTemplate.update("UPDATE grn SET is_submitted = TRUE WHERE grn_id = ?", grnId);
+    }
+
+    /** A rejected GRN: the rejector is recorded as checked_by while is_approved stays false. */
+    public int markRejected(UUID grnId, String rejectedBy) {
+        return jdbcTemplate.update(
+                "UPDATE grn SET checked_by = ?, checked_date = CURRENT_TIMESTAMP, is_approved = FALSE WHERE grn_id = ?",
+                rejectedBy, grnId);
     }
 
     /** Deletes the GRN; its items cascade. */

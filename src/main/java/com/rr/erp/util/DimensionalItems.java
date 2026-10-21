@@ -10,7 +10,14 @@ package com.rr.erp.util;
  */
 public final class DimensionalItems {
 
-    private static final String[] DIMENSIONAL_ITEM_PREFIXES = { "STBEAMS-", "STS-" };
+    // Legacy STBEAMS-/STS- plus the client-coded structural steel sub categories of C-FAB
+    // (I-beam, H-beam, C-channel, angle, flat bar, plate, chequered plate, wear plate,
+    // zinc-coated sheet, hollow shaft/bar). Keep in sync with dimensionalItems.ts.
+    private static final String[] DIMENSIONAL_ITEM_PREFIXES = {
+            "STBEAMS-", "STS-",
+            "C-FAB-IBM-", "C-FAB-HBM-", "C-FAB-CBM-", "C-FAB-ABM-", "C-FAB-FBM-",
+            "C-FAB-PLT-", "C-FAB-CQP-", "C-FAB-HXP-", "C-FAB-ZCS-", "C-FAB-HLS-"
+    };
 
     private DimensionalItems() {
     }

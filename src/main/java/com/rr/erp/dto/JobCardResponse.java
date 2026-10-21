@@ -1,6 +1,7 @@
 package com.rr.erp.dto;
 
 import com.rr.erp.entity.JobCard;
+import com.rr.erp.entity.JobCardOutput;
 import com.rr.erp.entity.Defect;
 import com.rr.erp.entity.JobCostEntry;
 import com.rr.erp.entity.JobIssueItemReturn;
@@ -22,4 +23,5 @@ public class JobCardResponse {
     private List<JobCostEntry> jobCostEntryList;
     private List<JobIssueItemReturn> issueItemReturnList;
     private List<JobCard> subJobCards;
+    private List<JobCardOutput> outputList;
 }

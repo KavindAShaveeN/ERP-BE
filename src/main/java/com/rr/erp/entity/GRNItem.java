@@ -65,6 +65,9 @@ public class GRNItem implements PackCarrier {
     // Expiry date for special items that expire, recorded at receipt; null for everything else.
     private java.time.LocalDate expiryDate;
 
+    // Item-wise free-text remarks entered on the GRN (separate from size / Part No).
+    private String remarks;
+
     // Ticked/unticked pack items of the asset on this line; stored in asset_pack_transaction.
     private java.util.List<PackSelection> packItems;
 }

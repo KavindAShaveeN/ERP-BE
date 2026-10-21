@@ -5,6 +5,7 @@ import com.rr.erp.entity.StockAdjustment;
 import com.rr.erp.entity.StockAdjustmentItem;
 import com.rr.erp.entity.StockActionAllocation;
 import com.rr.erp.repository.StockAdjustmentRepository;
+import com.rr.erp.security.SecurityUtil;
 import com.rr.erp.util.DimensionalItems;
 
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -27,6 +29,9 @@ public class StockAdjustmentService {
     private final StockBatchService stockBatchService;
     private final AssetLocationService assetLocationService;
     private final AssetService assetService;
+    private final ApprovalService approvalService;
+
+    static final String DOC_TYPE = "ADJ";
 
 
     @Transactional
@@ -40,9 +45,11 @@ public class StockAdjustmentService {
                 stockAdjustmentId
         );
 
-        if (adjustment.getIsApproved() == null) {
-            adjustment.setIsApproved(false);
-        }
+        // A new adjustment is always a Draft; approval is owned by the approval engine.
+        adjustment.setIsApproved(false);
+        adjustment.setIsSubmitted(false);
+        adjustment.setApprovedBy(null);
+        adjustment.setApprovedDate(null);
 
         repository.createStockAdjustment(
                 adjustment
@@ -138,6 +145,7 @@ public class StockAdjustmentService {
         }
 
         try {
+            approvalService.deleteForDocument(DOC_TYPE, stockAdjustmentId);
             repository.deleteById(stockAdjustmentId);
         } catch (org.springframework.dao.DataIntegrityViolationException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -167,6 +175,77 @@ public class StockAdjustmentService {
                             + " has already been approved and can no longer be edited."
             );
         }
+
+        // Only a Draft can be edited; once submitted it waits in the approvers' inbox.
+        if (Boolean.TRUE.equals(existing.getIsSubmitted())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Stock adjustment " + stockAdjustmentId + " has been submitted for approval and can no longer be edited."
+            );
+        }
+
+        // Approval is decided by the approval engine, never by the edit payload.
+        adjustment.setIsApproved(false);
+        adjustment.setApprovedBy(null);
+        adjustment.setApprovedDate(null);
+
+        return saveUpdate(stockAdjustmentId, adjustment);
+    }
+
+    /** Draft -> Requested: sends the adjustment to the approval engine (it then shows in "My approvals"). */
+    @Transactional
+    public StockAdjustment submitStockAdjustment(UUID stockAdjustmentId) {
+
+        StockAdjustment existing = repository.findById(stockAdjustmentId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Stock adjustment not found: " + stockAdjustmentId));
+
+        if (Boolean.TRUE.equals(existing.getIsApproved()) || Boolean.TRUE.equals(existing.getIsSubmitted())
+                || existing.getApprovedBy() != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This stock adjustment has already been submitted.");
+        }
+        if (repository.getItems(stockAdjustmentId).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Add at least one item before submitting.");
+        }
+
+        // Marked first: with no approval step configured, submit() approves straight away and
+        // the approval callback expects the adjustment to be in its submitted state.
+        repository.markSubmitted(stockAdjustmentId);
+        approvalService.submit(DOC_TYPE, stockAdjustmentId, existing.getProjectCode(), null,
+                SecurityUtil.currentEmployeeCode(), Map.of());
+
+        return repository.findById(stockAdjustmentId).orElse(existing);
+    }
+
+    /** Called by the approval engine when the last approver approves: this is the moment stock moves. */
+    @Transactional
+    public void approveFromWorkflow(UUID stockAdjustmentId, String approver) {
+
+        StockAdjustment existing = repository.findById(stockAdjustmentId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Stock adjustment not found: " + stockAdjustmentId));
+
+        // No approver means the workflow had no applicable step; the submitter stands in.
+        String by = approver != null ? approver : SecurityUtil.currentEmployeeCodeOrNull();
+
+        existing.setItems(repository.getItems(stockAdjustmentId));
+        existing.setApprovedBy(by);
+        existing.setApprovedDate(java.time.LocalDateTime.now());
+        existing.setIsApproved(true);
+
+        saveUpdate(stockAdjustmentId, existing);
+    }
+
+    /** Called by the approval engine on a rejection; stock is untouched. */
+    @Transactional
+    public void rejectFromWorkflow(UUID stockAdjustmentId, String rejectedBy) {
+        repository.markRejected(stockAdjustmentId, rejectedBy);
+    }
+
+    private StockAdjustment saveUpdate(
+            UUID stockAdjustmentId,
+            StockAdjustment adjustment
+    ) {
 
         int updated =
                 repository.updateStockAdjustment(

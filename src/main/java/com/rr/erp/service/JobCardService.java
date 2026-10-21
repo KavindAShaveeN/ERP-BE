@@ -32,6 +32,7 @@ public class JobCardService {
     private final JobIssueItemReturnRepository jobIssueItemReturnRepository;
     private final AssetService assetService;
     private final AssetLocationService assetLocationService;
+    private final JobCardOutputService jobCardOutputService;
 
 
     // =========================================================
@@ -39,7 +40,15 @@ public class JobCardService {
     // =========================================================
     @org.springframework.transaction.annotation.Transactional
     public JobCard createJobCard(JobCard jobCard) {
-        faultWorkflow.lockAsset(jobCard.getAssetCode());
+        if (JobCardOutputService.isFabrication(jobCard)) {
+            // A fabrication job builds something new: no asset, no reported faults, no sub jobs.
+            jobCard.setAssetCode(null);
+            if (jobCard.getParentJobCardId() != null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A fabrication job cannot have a main job card");
+            }
+        } else {
+            faultWorkflow.lockAsset(jobCard.getAssetCode());
+        }
         if (jobCard.getJobCardId() != null && jobCardRepository.getJobCardById(jobCard.getJobCardId()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "This job was already created. Open the existing job instead of submitting again.");
         }
@@ -98,7 +107,14 @@ public class JobCardService {
             JobCard jobCard) {
 
         JobCard existing = jobCardRepository.getJobCardById(jobCardId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Job card not found"));
-        faultWorkflow.lockAsset(existing.getAssetCode());
+        boolean fabrication = JobCardOutputService.isFabrication(existing);
+        if (fabrication != JobCardOutputService.isFabrication(jobCard))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "The job type cannot be changed to or from Fabrication");
+        if (fabrication) {
+            jobCard.setAssetCode(null);
+        } else {
+            faultWorkflow.lockAsset(existing.getAssetCode());
+        }
         faultWorkflow.lockJob(jobCardId);
         existing = jobCardRepository.getJobCardById(jobCardId).orElseThrow();
         if (!java.util.Objects.equals(existing.getAssetCode(), jobCard.getAssetCode()))
@@ -106,6 +122,12 @@ public class JobCardService {
         faultWorkflow.validateUpdate(existing,jobCard);
 
         boolean wasDelivered = Boolean.TRUE.equals(existing.getIsDelivered());
+        boolean wasClosed = wasDelivered || Boolean.TRUE.equals(existing.getIsFinished());
+        boolean closing = !wasClosed
+                && (Boolean.TRUE.equals(jobCard.getIsFinished()) || Boolean.TRUE.equals(jobCard.getIsDelivered()));
+        if (fabrication && closing && jobCardOutputService.getByJobCardId(jobCardId).isEmpty())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Add the finished products this job produced before finishing it");
 
         jobCard.setJobCardId(jobCardId);
         jobCard.setUpdatedDate(LocalDateTime.now());
@@ -124,6 +146,11 @@ public class JobCardService {
         }
 
         syncAssetStatus(jobCard);
+
+        if (fabrication && closing) {
+            // Same transaction as the update: if the stock credit fails the job stays open.
+            jobCardOutputService.postOutputs(existing);
+        }
 
         if (Boolean.TRUE.equals(jobCard.getIsDelivered()) && !wasDelivered) {
             handleJobCardDelivered(jobCard);
@@ -249,6 +276,8 @@ public class JobCardService {
                 .getByJobCardId(jobCardId));
         response.setSubJobCards(jobCardRepository
                 .getSubJobCards(jobCardId));
+        response.setOutputList(jobCardOutputService
+                .getByJobCardId(jobCardId));
         faultWorkflow.enrich(List.of(response.getInitialDetails()));
         faultWorkflow.enrich(response.getSubJobCards());
         return response;

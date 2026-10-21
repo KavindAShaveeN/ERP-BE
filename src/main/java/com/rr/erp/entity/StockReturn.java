@@ -34,6 +34,9 @@ public class StockReturn {
 
     private Boolean isApproved;
 
+    // Set once the return is sent to the approval engine (Draft -> Requested); owned by the server.
+    private Boolean isSubmitted;
+
     // Employee code of whoever receives the goods (internal returns only), and the transporting
     // vehicle's asset code (Vehicle asset master) with a free-text mirror of its registration
     // number — same as GIN's received_by / vehicle_asset_code / vehicle_no.

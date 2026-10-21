@@ -65,6 +65,12 @@ public class POController {
     }
 
 
+    // POST /api/po/{poId}/submit — Draft -> Requested
+    @PostMapping("/{poId}/submit")
+    public ResponseEntity<PO> submitPO(@PathVariable UUID poId) {
+        return ResponseEntity.ok(service.submitPO(poId));
+    }
+
     @PutMapping("/{poId}")
     public ResponseEntity<PO> updatePO(
             @PathVariable UUID poId,

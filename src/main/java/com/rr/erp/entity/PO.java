@@ -76,6 +76,9 @@ public class PO {
      */
     private List<UUID> relatedMrIds;
 
+    /** Not a column — job card 3P service rows this (service) PO was raised for; linked by POService.createPO. */
+    private List<UUID> threePServiceIds;
+
     /**
      * Not a stored column — Total Value + SSCL Amount + VAT Amount, computed on read so
      * it can never drift from its inputs.

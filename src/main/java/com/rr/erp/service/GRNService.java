@@ -12,6 +12,7 @@ import com.rr.erp.repository.GRNRepository;
 import com.rr.erp.repository.PORepository;
 import com.rr.erp.repository.ReceivedServiceRepository;
 import com.rr.erp.repository.ServiceItemRepository;
+import com.rr.erp.repository.ThreePServiceRepository;
 import com.rr.erp.repository.StockReturnRepository;
 import com.rr.erp.util.DimensionalItems;
 import org.slf4j.Logger;
@@ -47,6 +48,7 @@ public class GRNService {
     private final ServiceItemRepository serviceItemRepository;
     private final ReceivedServiceRepository receivedServiceRepository;
     private final TransportService transportService;
+    private final ThreePServiceRepository threePServiceRepository;
 
     public GRNService(
             GRNRepository grnRepository,
@@ -59,7 +61,8 @@ public class GRNService {
             AssetPackService assetPackService,
             ServiceItemRepository serviceItemRepository,
             ReceivedServiceRepository receivedServiceRepository,
-            TransportService transportService
+            TransportService transportService,
+            ThreePServiceRepository threePServiceRepository
     ) {
         this.grnRepository = grnRepository;
         this.poRepository = poRepository;
@@ -72,6 +75,7 @@ public class GRNService {
         this.serviceItemRepository = serviceItemRepository;
         this.receivedServiceRepository = receivedServiceRepository;
         this.transportService = transportService;
+        this.threePServiceRepository = threePServiceRepository;
     }
 
     @Transactional
@@ -569,6 +573,11 @@ public class GRNService {
         receivedService.setReceivedBy(grn.getApprovedBy());
 
         receivedServiceRepository.insert(receivedService);
+
+        // One supplier GRN covers every item on a job card service PO — close the job card rows.
+        if (grn.getPoCode() != null && !grn.getPoCode().isBlank()) {
+            threePServiceRepository.completeByPoCode(grn.getPoCode(), grn.getGrnDate());
+        }
     }
 
     /**

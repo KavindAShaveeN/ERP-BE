@@ -83,6 +83,7 @@ public class GRNRepository {
                     rs.getBigDecimal("width_m"),
                     rs.getString("asset_code"),
                     rs.getObject("expiry_date", java.time.LocalDate.class),
+                    rs.getString("remarks"),
                     null
             );
 
@@ -171,9 +172,10 @@ public class GRNRepository {
                     length_m,
                     width_m,
                     asset_code,
-                    expiry_date
+                    expiry_date,
+                    remarks
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         for (GRNItem item : items) {
@@ -200,7 +202,8 @@ public class GRNRepository {
                     item.getLengthM(),
                     item.getWidthM(),
                     item.getAssetCode(),
-                    item.getExpiryDate()
+                    item.getExpiryDate(),
+                    item.getRemarks()
             );
         }
     }
@@ -440,7 +443,8 @@ public class GRNRepository {
                     length_m,
                     width_m,
                     asset_code,
-                    expiry_date
+                    expiry_date,
+                    remarks
                 FROM grn_item
                 WHERE grn_id = ?
                 ORDER BY grn_item_id

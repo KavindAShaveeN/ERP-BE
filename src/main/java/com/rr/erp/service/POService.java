@@ -5,6 +5,7 @@ import com.rr.erp.entity.PO;
 import com.rr.erp.entity.POItem;
 import com.rr.erp.repository.POMaterialRequestRepository;
 import com.rr.erp.repository.PORepository;
+import com.rr.erp.repository.ThreePServiceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ public class POService {
 
     private final PORepository repository;
     private final POMaterialRequestRepository poMaterialRequestRepository;
+    private final ThreePServiceRepository threePServiceRepository;
 
 
     @Transactional
@@ -85,9 +87,39 @@ public class POService {
 
         poMaterialRequestRepository.replaceLinks(poId, po.getRelatedMrIds(), po.getRequestedBy());
 
+        linkThreePServices(po);
+
         recalculateTotals(poId);
 
         return findByIdWithItems(poId);
+    }
+
+    /** Job card service PO: link the 3P rows, move Requested to PO Created, copy each line amount to its row. */
+    private void linkThreePServices(PO po) {
+
+        java.util.Set<UUID> ids = new java.util.LinkedHashSet<>();
+        if (po.getThreePServiceIds() != null) {
+            ids.addAll(po.getThreePServiceIds());
+        }
+        if (po.getItems() != null) {
+            po.getItems().stream()
+                    .map(POItem::getThreePServiceId)
+                    .filter(java.util.Objects::nonNull)
+                    .forEach(ids::add);
+        }
+        if (ids.isEmpty()) {
+            return;
+        }
+
+        threePServiceRepository.markPoCreated(new java.util.ArrayList<>(ids), po.getPoCode(), po.getSupplierCode());
+
+        if (po.getItems() != null) {
+            for (POItem item : po.getItems()) {
+                if (item.getThreePServiceId() != null && item.getAmount() != null) {
+                    threePServiceRepository.setServiceCharge(item.getThreePServiceId(), po.getPoCode(), item.getAmount());
+                }
+            }
+        }
     }
 
 

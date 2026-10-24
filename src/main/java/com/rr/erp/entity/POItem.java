@@ -15,6 +15,7 @@ public class POItem {
     private String itemCode;
     private String description;
     private String partNo;
+    private String remark;
     private String supplierName;
 
     private Integer uomId;

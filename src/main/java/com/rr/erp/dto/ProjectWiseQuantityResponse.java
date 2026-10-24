@@ -40,4 +40,8 @@ public class ProjectWiseQuantityResponse {
     private BigDecimal totalJobReturned;
     /** Lifetime total issued out of this project's store as fuel. */
     private BigDecimal totalFuelIssued;
+    /** Lifetime total added to this project's store by approved stock adjustments. */
+    private BigDecimal totalAdjustedIn;
+    /** Lifetime total removed from this project's store by approved stock adjustments. */
+    private BigDecimal totalAdjustedOut;
 }

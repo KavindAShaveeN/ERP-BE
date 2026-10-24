@@ -940,7 +940,19 @@ public class StockMovementRepository {
                     COALESCE((
                         SELECT SUM(fi.quantity) FROM fuel_issue fi
                         WHERE fi.project_code = ? AND fi.fuel_type = ? AND fi.is_received = TRUE
-                    ), 0) AS total_fuel_issued
+                    ), 0) AS total_fuel_issued,
+                    COALESCE((
+                        SELECT SUM(sai.adjustment_quantity) FROM stock_adjustment sa
+                        JOIN stock_adjustment_item sai ON sai.stock_adjustment_id = sa.stock_adjustment_id
+                        WHERE sa.project_code = ? AND sai.item_code = ? AND sa.is_approved = TRUE
+                          AND sai.adjustment_quantity > 0
+                    ), 0) AS total_adjusted_in,
+                    COALESCE((
+                        SELECT SUM(ABS(sai2.adjustment_quantity)) FROM stock_adjustment sa2
+                        JOIN stock_adjustment_item sai2 ON sai2.stock_adjustment_id = sa2.stock_adjustment_id
+                        WHERE sa2.project_code = ? AND sai2.item_code = ? AND sa2.is_approved = TRUE
+                          AND sai2.adjustment_quantity < 0
+                    ), 0) AS total_adjusted_out
                 """;
         return jdbcTemplate.queryForObject(
                 sql,
@@ -954,10 +966,13 @@ public class StockMovementRepository {
                         rs.getBigDecimal("total_job_issued"),
                         rs.getBigDecimal("total_job_returned"),
                         rs.getBigDecimal("total_fuel_issued"),
+                        rs.getBigDecimal("total_adjusted_in"),
+                        rs.getBigDecimal("total_adjusted_out"),
                 },
                 projectCode, itemCode, projectCode, itemCode, projectCode, itemCode, projectCode, itemCode,
                 projectCode, itemCode, projectCode, itemCode,
-                projectCode, itemCode, projectCode, itemCode, projectCode, itemCode
+                projectCode, itemCode, projectCode, itemCode, projectCode, itemCode,
+                projectCode, itemCode, projectCode, itemCode
         );
     }
 
@@ -1024,7 +1039,21 @@ public class StockMovementRepository {
                         SELECT SUM(fi.quantity) FROM fuel_issue fi
                         JOIN project p ON p.project_code = fi.project_code
                         WHERE fi.fuel_type = ? AND fi.is_received = TRUE AND (?::int4 IS NULL OR p.project_type_id = ?)
-                    ), 0) AS total_fuel_issued
+                    ), 0) AS total_fuel_issued,
+                    COALESCE((
+                        SELECT SUM(sai.adjustment_quantity) FROM stock_adjustment sa
+                        JOIN stock_adjustment_item sai ON sai.stock_adjustment_id = sa.stock_adjustment_id
+                        JOIN project p ON p.project_code = sa.project_code
+                        WHERE sai.item_code = ? AND sa.is_approved = TRUE AND sai.adjustment_quantity > 0
+                          AND (?::int4 IS NULL OR p.project_type_id = ?)
+                    ), 0) AS total_adjusted_in,
+                    COALESCE((
+                        SELECT SUM(ABS(sai2.adjustment_quantity)) FROM stock_adjustment sa2
+                        JOIN stock_adjustment_item sai2 ON sai2.stock_adjustment_id = sa2.stock_adjustment_id
+                        JOIN project p ON p.project_code = sa2.project_code
+                        WHERE sai2.item_code = ? AND sa2.is_approved = TRUE AND sai2.adjustment_quantity < 0
+                          AND (?::int4 IS NULL OR p.project_type_id = ?)
+                    ), 0) AS total_adjusted_out
                 """;
         return jdbcTemplate.queryForObject(
                 sql,
@@ -1038,7 +1067,11 @@ public class StockMovementRepository {
                         rs.getBigDecimal("total_job_issued"),
                         rs.getBigDecimal("total_job_returned"),
                         rs.getBigDecimal("total_fuel_issued"),
+                        rs.getBigDecimal("total_adjusted_in"),
+                        rs.getBigDecimal("total_adjusted_out"),
                 },
+                itemCode, projectTypeId, projectTypeId,
+                itemCode, projectTypeId, projectTypeId,
                 itemCode, projectTypeId, projectTypeId,
                 itemCode, projectTypeId, projectTypeId,
                 itemCode, projectTypeId, projectTypeId,

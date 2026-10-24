@@ -453,6 +453,8 @@ public class ProjectStoreService {
             item.setTotalFuelIssued(totals[8]);
             item.setTotalAdjustedIn(totals[9]);
             item.setTotalAdjustedOut(totals[10]);
+            item.setTotalIntraReturned(totals[11]);
+            item.setTotalStockReturned(totals[12]);
         }
 
         return items;
@@ -475,6 +477,8 @@ public class ProjectStoreService {
             item.setTotalFuelIssued(totals[8]);
             item.setTotalAdjustedIn(totals[9]);
             item.setTotalAdjustedOut(totals[10]);
+            item.setTotalIntraReturned(totals[11]);
+            item.setTotalStockReturned(totals[12]);
         }
 
         return items;
@@ -497,6 +501,8 @@ public class ProjectStoreService {
             row.setTotalFuelIssued(totals[8]);
             row.setTotalAdjustedIn(totals[9]);
             row.setTotalAdjustedOut(totals[10]);
+            row.setTotalIntraReturned(totals[11]);
+            row.setTotalStockReturned(totals[12]);
         }
 
         return rows;

@@ -166,22 +166,18 @@ public class StockMovementRepository {
     }
 
     public List<StockMovementResponse> getGrnHistory(String projectCode, String itemCode) {
-        // A supplier GRN's to_project_code is always the fixed HO routing destination
-        // (see useHqScope.ts on the frontend), NOT the project the goods are actually for —
-        // that's from_project_code, the requesting/owning project. An internal-transfer GRN
-        // (is_supplier_grn = false) has no such fixed destination, so its to_project_code IS
-        // the real receiving project there. This CASE picks the right column either way, and
-        // the counterparty is the supplier (already carried via supplier_code/supplier_name)
-        // for a supplier GRN, or the sending project for an internal transfer. Only an
-        // approved GRN has actually credited project_store (see GRNService).
+        // grn.from_project_code is always the project that filed the GRN and is credited by
+        // GRNService (supplier or internal); to_project_code is the HQ routing destination for a
+        // supplier GRN, or the sending project for an internal transfer (the counterparty here).
+        // Only an approved GRN has actually credited project_store.
         String sql = """
                 SELECT
                     'GRN' AS type,
                     grn.grn_code AS doc_code,
                     grn.grn_date AS movement_date,
-                    CASE WHEN grn.is_supplier_grn THEN grn.from_project_code ELSE grn.to_project_code END AS project_code,
+                    grn.from_project_code AS project_code,
                     p.projectname AS project_name,
-                    CASE WHEN grn.is_supplier_grn THEN NULL ELSE grn.from_project_code END AS counterparty_project_code,
+                    CASE WHEN grn.is_supplier_grn THEN NULL ELSE grn.to_project_code END AS counterparty_project_code,
                     cp.projectname AS counterparty_project_name,
                     'IN' AS direction,
                     gi.quantity AS quantity,
@@ -194,12 +190,11 @@ public class StockMovementRepository {
                     COALESCE(gi.amount, gi.quantity * gi.unit_price) AS amount
                 FROM grn
                 JOIN grn_item gi ON gi.grn_id = grn.grn_id
-                LEFT JOIN project p ON p.project_code =
-                    CASE WHEN grn.is_supplier_grn THEN grn.from_project_code ELSE grn.to_project_code END
+                LEFT JOIN project p ON p.project_code = grn.from_project_code
                 LEFT JOIN project cp ON cp.project_code =
-                    CASE WHEN grn.is_supplier_grn THEN NULL ELSE grn.from_project_code END
+                    CASE WHEN grn.is_supplier_grn THEN NULL ELSE grn.to_project_code END
                 LEFT JOIN supplier s ON s.suppliercode = grn.supplier_code
-                WHERE (CASE WHEN grn.is_supplier_grn THEN grn.from_project_code ELSE grn.to_project_code END) = ?
+                WHERE grn.from_project_code = ?
                   AND gi.item_code = ?
                   AND grn.is_approved = TRUE
                 """;
@@ -212,9 +207,9 @@ public class StockMovementRepository {
                     'GRN' AS type,
                     grn.grn_code AS doc_code,
                     grn.grn_date AS movement_date,
-                    CASE WHEN grn.is_supplier_grn THEN grn.from_project_code ELSE grn.to_project_code END AS project_code,
+                    grn.from_project_code AS project_code,
                     p.projectname AS project_name,
-                    CASE WHEN grn.is_supplier_grn THEN NULL ELSE grn.from_project_code END AS counterparty_project_code,
+                    CASE WHEN grn.is_supplier_grn THEN NULL ELSE grn.to_project_code END AS counterparty_project_code,
                     cp.projectname AS counterparty_project_name,
                     'IN' AS direction,
                     gi.quantity AS quantity,
@@ -227,10 +222,9 @@ public class StockMovementRepository {
                     COALESCE(gi.amount, gi.quantity * gi.unit_price) AS amount
                 FROM grn
                 JOIN grn_item gi ON gi.grn_id = grn.grn_id
-                JOIN project p ON p.project_code =
-                    CASE WHEN grn.is_supplier_grn THEN grn.from_project_code ELSE grn.to_project_code END
+                JOIN project p ON p.project_code = grn.from_project_code
                 LEFT JOIN project cp ON cp.project_code =
-                    CASE WHEN grn.is_supplier_grn THEN NULL ELSE grn.from_project_code END
+                    CASE WHEN grn.is_supplier_grn THEN NULL ELSE grn.to_project_code END
                 LEFT JOIN supplier s ON s.suppliercode = grn.supplier_code
                 WHERE gi.item_code = ?
                   AND grn.is_approved = TRUE
@@ -901,7 +895,7 @@ public class StockMovementRepository {
                     COALESCE((
                         SELECT SUM(gi.quantity) FROM grn g
                         JOIN grn_item gi ON gi.grn_id = g.grn_id
-                        WHERE (CASE WHEN g.is_supplier_grn THEN g.from_project_code ELSE g.to_project_code END) = ?
+                        WHERE g.from_project_code = ? AND g.is_supplier_grn = TRUE
                           AND gi.item_code = ? AND g.is_approved = TRUE
                     ), 0) AS total_received,
                     COALESCE((
@@ -915,9 +909,10 @@ public class StockMovementRepository {
                         WHERE g2.issued_project_code = ? AND gi2.item_code = ? AND g2.is_authorized = TRUE
                     ), 0) AS total_issued_inter_project,
                     COALESCE((
-                        SELECT SUM(gi3.quantity) FROM gin g3
-                        JOIN gin_item gi3 ON gi3.gin_id = g3.gin_id
-                        WHERE g3.received_project_code = ? AND gi3.item_code = ? AND g3.is_authorized = TRUE
+                        SELECT SUM(gi3.quantity) FROM grn g3
+                        JOIN grn_item gi3 ON gi3.grn_id = g3.grn_id
+                        WHERE g3.from_project_code = ? AND g3.is_supplier_grn = FALSE
+                          AND gi3.item_code = ? AND g3.is_approved = TRUE
                     ), 0) AS total_received_inter_project,
                     COALESCE((
                         SELECT SUM(ppo.produced_quantity) FROM plant_production pp
@@ -952,7 +947,18 @@ public class StockMovementRepository {
                         JOIN stock_adjustment_item sai2 ON sai2.stock_adjustment_id = sa2.stock_adjustment_id
                         WHERE sa2.project_code = ? AND sai2.item_code = ? AND sa2.is_approved = TRUE
                           AND sai2.adjustment_quantity < 0
-                    ), 0) AS total_adjusted_out
+                    ), 0) AS total_adjusted_out,
+                    COALESCE((
+                        SELECT SUM(rit.quantity) FROM intra_project_issue_return ret
+                        JOIN intra_project_issue_return_item rit
+                            ON rit.intra_project_issue_return_id = ret.intra_project_issue_return_id
+                        WHERE ret.issued_project_code = ? AND rit.item_code = ? AND ret.is_approved = TRUE
+                    ), 0) AS total_intra_returned,
+                    COALESCE((
+                        SELECT SUM(sri.quantity) FROM stock_return sr
+                        JOIN stock_return_item sri ON sri.stock_return_id = sr.stock_return_id
+                        WHERE sr.from_project_code = ? AND sri.item_code = ? AND sr.is_approved = TRUE
+                    ), 0) AS total_stock_returned
                 """;
         return jdbcTemplate.queryForObject(
                 sql,
@@ -968,10 +974,13 @@ public class StockMovementRepository {
                         rs.getBigDecimal("total_fuel_issued"),
                         rs.getBigDecimal("total_adjusted_in"),
                         rs.getBigDecimal("total_adjusted_out"),
+                        rs.getBigDecimal("total_intra_returned"),
+                        rs.getBigDecimal("total_stock_returned"),
                 },
                 projectCode, itemCode, projectCode, itemCode, projectCode, itemCode, projectCode, itemCode,
                 projectCode, itemCode, projectCode, itemCode,
                 projectCode, itemCode, projectCode, itemCode, projectCode, itemCode,
+                projectCode, itemCode, projectCode, itemCode,
                 projectCode, itemCode, projectCode, itemCode
         );
     }
@@ -991,9 +1000,9 @@ public class StockMovementRepository {
                     COALESCE((
                         SELECT SUM(gi.quantity) FROM grn g
                         JOIN grn_item gi ON gi.grn_id = g.grn_id
-                        JOIN project p ON p.project_code =
-                            CASE WHEN g.is_supplier_grn THEN g.from_project_code ELSE g.to_project_code END
-                        WHERE gi.item_code = ? AND g.is_approved = TRUE AND (?::int4 IS NULL OR p.project_type_id = ?)
+                        JOIN project p ON p.project_code = g.from_project_code
+                        WHERE gi.item_code = ? AND g.is_approved = TRUE AND g.is_supplier_grn = TRUE
+                          AND (?::int4 IS NULL OR p.project_type_id = ?)
                     ), 0) AS total_received,
                     COALESCE((
                         SELECT SUM(item.quantity) FROM intra_project_issue issue
@@ -1008,10 +1017,11 @@ public class StockMovementRepository {
                         WHERE gi2.item_code = ? AND g2.is_authorized = TRUE AND (?::int4 IS NULL OR p.project_type_id = ?)
                     ), 0) AS total_issued_inter_project,
                     COALESCE((
-                        SELECT SUM(gi3.quantity) FROM gin g3
-                        JOIN gin_item gi3 ON gi3.gin_id = g3.gin_id
-                        JOIN project p ON p.project_code = g3.received_project_code
-                        WHERE gi3.item_code = ? AND g3.is_authorized = TRUE AND (?::int4 IS NULL OR p.project_type_id = ?)
+                        SELECT SUM(gi3.quantity) FROM grn g3
+                        JOIN grn_item gi3 ON gi3.grn_id = g3.grn_id
+                        JOIN project p ON p.project_code = g3.from_project_code
+                        WHERE gi3.item_code = ? AND g3.is_approved = TRUE AND g3.is_supplier_grn = FALSE
+                          AND (?::int4 IS NULL OR p.project_type_id = ?)
                     ), 0) AS total_received_inter_project,
                     COALESCE((
                         SELECT SUM(ppo.produced_quantity) FROM plant_production pp
@@ -1053,7 +1063,22 @@ public class StockMovementRepository {
                         JOIN project p ON p.project_code = sa2.project_code
                         WHERE sai2.item_code = ? AND sa2.is_approved = TRUE AND sai2.adjustment_quantity < 0
                           AND (?::int4 IS NULL OR p.project_type_id = ?)
-                    ), 0) AS total_adjusted_out
+                    ), 0) AS total_adjusted_out,
+                    COALESCE((
+                        SELECT SUM(rit.quantity) FROM intra_project_issue_return ret
+                        JOIN intra_project_issue_return_item rit
+                            ON rit.intra_project_issue_return_id = ret.intra_project_issue_return_id
+                        JOIN project p ON p.project_code = ret.issued_project_code
+                        WHERE rit.item_code = ? AND ret.is_approved = TRUE
+                          AND (?::int4 IS NULL OR p.project_type_id = ?)
+                    ), 0) AS total_intra_returned,
+                    COALESCE((
+                        SELECT SUM(sri.quantity) FROM stock_return sr
+                        JOIN stock_return_item sri ON sri.stock_return_id = sr.stock_return_id
+                        JOIN project p ON p.project_code = sr.from_project_code
+                        WHERE sri.item_code = ? AND sr.is_approved = TRUE
+                          AND (?::int4 IS NULL OR p.project_type_id = ?)
+                    ), 0) AS total_stock_returned
                 """;
         return jdbcTemplate.queryForObject(
                 sql,
@@ -1069,7 +1094,11 @@ public class StockMovementRepository {
                         rs.getBigDecimal("total_fuel_issued"),
                         rs.getBigDecimal("total_adjusted_in"),
                         rs.getBigDecimal("total_adjusted_out"),
+                        rs.getBigDecimal("total_intra_returned"),
+                        rs.getBigDecimal("total_stock_returned"),
                 },
+                itemCode, projectTypeId, projectTypeId,
+                itemCode, projectTypeId, projectTypeId,
                 itemCode, projectTypeId, projectTypeId,
                 itemCode, projectTypeId, projectTypeId,
                 itemCode, projectTypeId, projectTypeId,

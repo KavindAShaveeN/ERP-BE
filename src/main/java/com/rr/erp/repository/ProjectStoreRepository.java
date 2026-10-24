@@ -251,7 +251,15 @@ public class ProjectStoreRepository {
                         ps.quantity_on_hand,
                         ps.reorder_level,
                         ps.reorder_quantity,
-                        ps.bin_location
+                        ps.bin_location,
+                        (
+                            SELECT SUM(loc.qty_remaining * b.unit_cost) / NULLIF(SUM(loc.qty_remaining), 0)
+                            FROM stock_batch_location loc
+                            JOIN stock_batch b ON b.stock_batch_id = loc.stock_batch_id
+                            WHERE loc.project_code = ps.project_code
+                              AND b.item_code = ps.item_code
+                              AND loc.qty_remaining > 0
+                        ) AS average_unit_price
                     FROM project_store ps
                     LEFT JOIN item_code i
                         ON ps.item_code = i.item_code_code
@@ -277,6 +285,7 @@ public class ProjectStoreRepository {
                     response.setReorderLevel(rs.getBigDecimal("reorder_level"));
                     response.setReorderQuantity(rs.getBigDecimal("reorder_quantity"));
                     response.setBinLocation(rs.getString("bin_location"));
+                    response.setAverageUnitPrice(rs.getBigDecimal("average_unit_price"));
 
                     return response;
                 },
@@ -376,7 +385,16 @@ public class ProjectStoreRepository {
                         ps.item_code,
                         i.item_code_name,
                         COALESCE(ci.uom_id, ii.uom_id, nsi.uom_id) AS uom_id,
-                        SUM(ps.quantity_on_hand) AS quantity_on_hand
+                        SUM(ps.quantity_on_hand) AS quantity_on_hand,
+                        (
+                            SELECT SUM(loc.qty_remaining * b.unit_cost) / NULLIF(SUM(loc.qty_remaining), 0)
+                            FROM stock_batch_location loc
+                            JOIN stock_batch b ON b.stock_batch_id = loc.stock_batch_id
+                            JOIN project lp ON lp.project_code = loc.project_code
+                            WHERE b.item_code = ps.item_code
+                              AND loc.qty_remaining > 0
+                              AND (?::int4 IS NULL OR lp.project_type_id = ?)
+                        ) AS average_unit_price
                     FROM project_store ps
                     JOIN project pr
                         ON pr.project_code = ps.project_code
@@ -402,10 +420,11 @@ public class ProjectStoreRepository {
                     response.setItemCodeName(rs.getString("item_code_name"));
                     response.setUomId(rs.getObject("uom_id", Integer.class));
                     response.setQuantityOnHand(rs.getBigDecimal("quantity_on_hand"));
+                    response.setAverageUnitPrice(rs.getBigDecimal("average_unit_price"));
 
                     return response;
                 },
-                projectTypeId, projectTypeId
+                projectTypeId, projectTypeId, projectTypeId, projectTypeId
         );
     }
 

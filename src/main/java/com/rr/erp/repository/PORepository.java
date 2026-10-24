@@ -160,13 +160,14 @@ public class PORepository {
                     item_code,
                     description,
                     part_no,
+                    remark,
                     supplier_name,
                     uom_id,
                     quantity,
                     unit_price,
                     amount
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         return jdbcTemplate.update(
@@ -176,6 +177,7 @@ public class PORepository {
                 item.getItemCode(),
                 item.getDescription(),
                 item.getPartNo(),
+                item.getRemark(),
                 item.getSupplierName(),
                 item.getUomId(),
                 item.getQuantity(),
@@ -317,6 +319,10 @@ public class PORepository {
                             rs.getString("part_no")
                     );
 
+                    item.setRemark(
+                            rs.getString("remark")
+                    );
+
                     item.setSupplierName(
                             rs.getString("supplier_name")
                     );
@@ -373,6 +379,7 @@ public class PORepository {
                     item.setItemCode(rs.getString("item_code"));
                     item.setDescription(rs.getString("description"));
                     item.setPartNo(rs.getString("part_no"));
+                    item.setRemark(rs.getString("remark"));
                     item.setSupplierName(rs.getString("supplier_name"));
                     item.setUomId(rs.getObject("uom_id", Integer.class));
                     item.setQuantity(rs.getObject("quantity", Integer.class));
@@ -534,6 +541,7 @@ public class PORepository {
                     item.setItemCode(rs.getString("item_code"));
                     item.setDescription(rs.getString("description"));
                     item.setPartNo(rs.getString("part_no"));
+                    item.setRemark(rs.getString("remark"));
                     item.setSupplierName(rs.getString("supplier_name"));
                     item.setUomId(rs.getObject("uom_id", Integer.class));
                     item.setQuantity(rs.getObject("quantity", Integer.class));

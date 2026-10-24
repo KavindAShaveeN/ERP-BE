@@ -43,4 +43,13 @@ public class ItemCodeResponse {
     /** Lifetime total issued out of this project's store as fuel — debited once the receiver
      * confirms delivery. Never goes through a GIN or intra-project issue. */
     private BigDecimal totalFuelIssued;
+    /** Lifetime total added to this store by approved stock adjustments (positive quantities). */
+    private BigDecimal totalAdjustedIn;
+    /** Lifetime total removed from this store by approved stock adjustments (negative quantities,
+     * as a positive figure). */
+    private BigDecimal totalAdjustedOut;
+    /** Weighted-average unit cost of the quantity currently on hand (from the remaining FIFO
+     * batches) — for this project's store, or across every project in the HQ view. Null when
+     * nothing is on hand. */
+    private BigDecimal averageUnitPrice;
 }

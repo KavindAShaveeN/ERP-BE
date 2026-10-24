@@ -44,4 +44,8 @@ public class ProjectWiseQuantityResponse {
     private BigDecimal totalAdjustedIn;
     /** Lifetime total removed from this project's store by approved stock adjustments. */
     private BigDecimal totalAdjustedOut;
+    /** Lifetime total returned into this store from approved intra project issue returns. */
+    private BigDecimal totalIntraReturned;
+    /** Lifetime total sent out of this store by approved stock returns. */
+    private BigDecimal totalStockReturned;
 }

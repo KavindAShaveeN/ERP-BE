@@ -48,6 +48,10 @@ public class ItemCodeResponse {
     /** Lifetime total removed from this store by approved stock adjustments (negative quantities,
      * as a positive figure). */
     private BigDecimal totalAdjustedOut;
+    /** Lifetime total returned into this store from approved intra project issue returns. */
+    private BigDecimal totalIntraReturned;
+    /** Lifetime total sent out of this store by approved stock returns. */
+    private BigDecimal totalStockReturned;
     /** Weighted-average unit cost of the quantity currently on hand (from the remaining FIFO
      * batches) — for this project's store, or across every project in the HQ view. Null when
      * nothing is on hand. */

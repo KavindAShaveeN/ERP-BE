@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -545,6 +546,48 @@ public class GRNRepository {
                 """;
 
         jdbcTemplate.update(sql, grnId);
+    }
+
+    /**
+     * Quantity already received against one PO line, in the PO's UOM, across every GRN for that PO
+     * except {@code excludeGrnId}. Rejected GRNs (checked but not approved) do not count.
+     */
+    public BigDecimal sumPoEquivalentReceived(String poCode, String itemCode, UUID excludeGrnId) {
+
+        String sql = """
+                SELECT COALESCE(SUM(gi.po_equivalent_qty), 0)
+                FROM grn_item gi
+                JOIN grn g ON g.grn_id = gi.grn_id
+                WHERE g.po_code = ?
+                  AND gi.item_code = ?
+                  AND (g.is_approved = TRUE OR g.checked_by IS NULL)
+                  AND (CAST(? AS uuid) IS NULL OR g.grn_id <> CAST(? AS uuid))
+                """;
+
+        return jdbcTemplate.queryForObject(sql, BigDecimal.class, poCode, itemCode, excludeGrnId, excludeGrnId);
+    }
+
+    /**
+     * Quantity already received against a GIN, per line (item code, or asset code for an asset line),
+     * across every GRN for that GIN except {@code excludeGrnId}. Rejected GRNs do not count.
+     */
+    public java.util.Map<String, BigDecimal> sumReceivedByGin(UUID ginId, UUID excludeGrnId) {
+
+        String sql = """
+                SELECT COALESCE(gi.item_code, gi.asset_code) AS line_key, SUM(gi.quantity) AS qty
+                FROM grn_item gi
+                JOIN grn g ON g.grn_id = gi.grn_id
+                WHERE g.gin_id = ?
+                  AND (g.is_approved = TRUE OR g.checked_by IS NULL)
+                  AND (CAST(? AS uuid) IS NULL OR g.grn_id <> CAST(? AS uuid))
+                GROUP BY COALESCE(gi.item_code, gi.asset_code)
+                """;
+
+        java.util.Map<String, BigDecimal> result = new java.util.HashMap<>();
+        jdbcTemplate.query(sql, rs -> {
+            result.put(rs.getString("line_key"), rs.getBigDecimal("qty"));
+        }, ginId, excludeGrnId, excludeGrnId);
+        return result;
     }
 
     public boolean existsById(UUID grnId) {

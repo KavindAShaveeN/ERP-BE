@@ -105,6 +105,8 @@ public class GRNService {
 
         validateGRN(grn);
         applyPoUomConversions(grn);
+        assertWithinPoQuantity(grn, null);
+        assertWithinGinQuantity(grn, null);
         calculateAmounts(grn);
         applyArrivalGateVerification(grn);
         applyApprovalGatePass(grn);
@@ -304,6 +306,8 @@ public class GRNService {
 
         validateGRN(grn);
         applyPoUomConversions(grn);
+        assertWithinPoQuantity(grn, grnId);
+        assertWithinGinQuantity(grn, grnId);
         calculateAmounts(grn);
         applyApprovalGatePass(grn);
 
@@ -524,6 +528,93 @@ public class GRNService {
             item.setPoEquivalentQty(
                     item.getQuantity().divide(item.getConversionFactor(), 6, RoundingMode.HALF_UP)
             );
+        }
+    }
+
+    /** A PO line cannot be received beyond its ordered quantity, counting the GRNs already raised for it. */
+    private void assertWithinPoQuantity(GRN grn, UUID excludeGrnId) {
+
+        if (grn.getPoCode() == null || grn.getPoCode().isBlank()) {
+            return;
+        }
+
+        Map<String, BigDecimal> thisGrnByItem = new java.util.HashMap<>();
+        for (GRNItem item : grn.getItems()) {
+            BigDecimal qty = item.getPoEquivalentQty() != null ? item.getPoEquivalentQty() : item.getQuantity();
+            thisGrnByItem.merge(item.getItemCode(), qty, BigDecimal::add);
+        }
+
+        for (Map.Entry<String, BigDecimal> entry : thisGrnByItem.entrySet()) {
+
+            POItem poItem = poRepository.findPOItemByPoCodeAndItemCode(grn.getPoCode(), entry.getKey());
+            if (poItem == null || poItem.getQuantity() == null) {
+                continue;
+            }
+
+            BigDecimal alreadyReceived = grnRepository.sumPoEquivalentReceived(
+                    grn.getPoCode(), entry.getKey(), excludeGrnId);
+            BigDecimal ordered = BigDecimal.valueOf(poItem.getQuantity());
+            BigDecimal remaining = ordered.subtract(alreadyReceived).max(BigDecimal.ZERO);
+
+            if (entry.getValue().compareTo(remaining) > 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        remaining.signum() == 0
+                                ? "PO " + grn.getPoCode() + " item " + entry.getKey()
+                                        + " is already fully received; no more GRN can be raised for it."
+                                : "PO " + grn.getPoCode() + " item " + entry.getKey()
+                                        + ": only " + remaining.stripTrailingZeros().toPlainString()
+                                        + " remaining to receive (ordered "
+                                        + ordered.stripTrailingZeros().toPlainString() + ")."
+                );
+            }
+        }
+    }
+
+    /** A GRN raised from a GIN cannot receive more than the GIN issued, counting the GRNs already raised for it. */
+    private void assertWithinGinQuantity(GRN grn, UUID excludeGrnId) {
+
+        if (grn.getGinId() == null) {
+            return;
+        }
+
+        Map<String, BigDecimal> issued = new java.util.HashMap<>();
+        for (var ginItem : ginRepository.getGinItems(grn.getGinId())) {
+            String key = ginItem.getItemCode() != null ? ginItem.getItemCode() : ginItem.getAssetCode();
+            if (key != null && ginItem.getQuantity() != null) {
+                issued.merge(key, ginItem.getQuantity(), BigDecimal::add);
+            }
+        }
+
+        Map<String, BigDecimal> alreadyReceived = grnRepository.sumReceivedByGin(grn.getGinId(), excludeGrnId);
+
+        Map<String, BigDecimal> thisGrn = new java.util.HashMap<>();
+        for (GRNItem item : grn.getItems()) {
+            String key = item.getItemCode() != null ? item.getItemCode() : item.getAssetCode();
+            if (key != null && item.getQuantity() != null) {
+                thisGrn.merge(key, item.getQuantity(), BigDecimal::add);
+            }
+        }
+
+        for (Map.Entry<String, BigDecimal> entry : thisGrn.entrySet()) {
+
+            BigDecimal sent = issued.get(entry.getKey());
+            if (sent == null) {
+                continue;
+            }
+
+            BigDecimal remaining = sent.subtract(alreadyReceived.getOrDefault(entry.getKey(), BigDecimal.ZERO))
+                    .max(BigDecimal.ZERO);
+
+            if (entry.getValue().compareTo(remaining) > 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        remaining.signum() == 0
+                                ? "Item " + entry.getKey() + " of this GIN is already fully received; no more GRN can be raised for it."
+                                : "Item " + entry.getKey() + ": only " + remaining.stripTrailingZeros().toPlainString()
+                                        + " remaining to receive (issued " + sent.stripTrailingZeros().toPlainString() + ")."
+                );
+            }
         }
     }
 

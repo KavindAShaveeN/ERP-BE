@@ -310,7 +310,7 @@ public class StockMovementRepository {
                     'OUT' AS direction,
                     item.quantity AS quantity,
                     item.uom_id AS uom_id,
-                    issue.is_authorized AS is_approved,
+                    (issue.is_authorized = TRUE OR issue.issue_type NOT IN ('SUBCONTRACTOR', 'JOB_CARD')) AS is_approved,
                     item.remarks AS remarks,
                     NULL AS supplier_code,
                     NULL AS supplier_name,
@@ -320,7 +320,7 @@ public class StockMovementRepository {
                 JOIN intra_project_issue_item item ON item.intra_project_issue_id = issue.intra_project_issue_id
                 LEFT JOIN project p ON p.project_code = issue.issued_project_code
                 WHERE issue.issued_project_code = ? AND item.item_code = ?
-                  AND issue.is_authorized = TRUE
+                  AND (issue.is_authorized = TRUE OR issue.issue_type NOT IN ('SUBCONTRACTOR', 'JOB_CARD'))
                 """;
         return jdbcTemplate.query(sql, MOVEMENT_MAPPER, projectCode, itemCode);
     }
@@ -338,7 +338,7 @@ public class StockMovementRepository {
                     'OUT' AS direction,
                     item.quantity AS quantity,
                     item.uom_id AS uom_id,
-                    issue.is_authorized AS is_approved,
+                    (issue.is_authorized = TRUE OR issue.issue_type NOT IN ('SUBCONTRACTOR', 'JOB_CARD')) AS is_approved,
                     item.remarks AS remarks,
                     NULL AS supplier_code,
                     NULL AS supplier_name,
@@ -348,7 +348,7 @@ public class StockMovementRepository {
                 JOIN intra_project_issue_item item ON item.intra_project_issue_id = issue.intra_project_issue_id
                 JOIN project p ON p.project_code = issue.issued_project_code
                 WHERE item.item_code = ?
-                  AND issue.is_authorized = TRUE
+                  AND (issue.is_authorized = TRUE OR issue.issue_type NOT IN ('SUBCONTRACTOR', 'JOB_CARD'))
                   AND (?::int4 IS NULL OR p.project_type_id = ?)
                 """;
         return jdbcTemplate.query(sql, MOVEMENT_MAPPER, itemCode, projectTypeId, projectTypeId);
@@ -901,7 +901,7 @@ public class StockMovementRepository {
                     COALESCE((
                         SELECT SUM(item.quantity) FROM intra_project_issue issue
                         JOIN intra_project_issue_item item ON item.intra_project_issue_id = issue.intra_project_issue_id
-                        WHERE issue.issued_project_code = ? AND item.item_code = ? AND issue.is_authorized = TRUE
+                        WHERE issue.issued_project_code = ? AND item.item_code = ? AND (issue.is_authorized = TRUE OR issue.issue_type NOT IN ('SUBCONTRACTOR', 'JOB_CARD'))
                     ), 0) AS total_issued_intra,
                     COALESCE((
                         SELECT SUM(gi2.quantity) FROM gin g2
@@ -1008,7 +1008,7 @@ public class StockMovementRepository {
                         SELECT SUM(item.quantity) FROM intra_project_issue issue
                         JOIN intra_project_issue_item item ON item.intra_project_issue_id = issue.intra_project_issue_id
                         JOIN project p ON p.project_code = issue.issued_project_code
-                        WHERE item.item_code = ? AND issue.is_authorized = TRUE AND (?::int4 IS NULL OR p.project_type_id = ?)
+                        WHERE item.item_code = ? AND (issue.is_authorized = TRUE OR issue.issue_type NOT IN ('SUBCONTRACTOR', 'JOB_CARD')) AND (?::int4 IS NULL OR p.project_type_id = ?)
                     ), 0) AS total_issued_intra,
                     COALESCE((
                         SELECT SUM(gi2.quantity) FROM gin g2

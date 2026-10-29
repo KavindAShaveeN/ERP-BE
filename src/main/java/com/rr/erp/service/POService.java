@@ -162,7 +162,8 @@ public class POService {
      * Recomputes SSCL/VAT for a PO from its current total_value and tax settings, then
      * persists the result. (Final PO Value itself isn't stored — PO.getFinalPoValue()
      * derives it from total_value + sscl_amount + vat_amount on every read.)
-     * SSCL Amount = Total Value x SSCL Rate (0 if not applicable)
+     * SSCL Amount = Total Value x 85% x SSCL Rate / (100 - SSCL Rate) (0 if not applicable),
+     * e.g. 2.5% -> Total Value x 85% x 2.5 / 97.5
      * VAT Amount = (Total Value + SSCL Amount) x VAT Rate
      */
     @Transactional
@@ -184,8 +185,9 @@ public class POService {
                 po.getVatPercentage() != null ? po.getVatPercentage() : BigDecimal.ZERO;
 
         BigDecimal ssclAmount = Boolean.TRUE.equals(po.getSsclApplicable())
-                ? totalValue.multiply(ssclPercentage)
-                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
+                ? totalValue.multiply(BigDecimal.valueOf(0.85))
+                        .multiply(ssclPercentage)
+                        .divide(BigDecimal.valueOf(100).subtract(ssclPercentage), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
         BigDecimal vatAmount = totalValue.add(ssclAmount)

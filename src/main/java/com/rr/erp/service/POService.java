@@ -8,8 +8,11 @@ import com.rr.erp.repository.PORepository;
 import com.rr.erp.repository.ThreePServiceRepository;
 import com.rr.erp.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -397,6 +400,29 @@ public class POService {
                 SecurityUtil.currentEmployeeCode(), Map.of());
 
         return findByIdWithItems(poId);
+    }
+
+    /** A PO can be deleted until it is approved; after that GRNs and payments may rely on it. */
+    @Transactional
+    public void deletePO(UUID poId) {
+
+        PO existing = repository.findById(poId);
+        if (existing == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Purchase Order not found: " + poId);
+        }
+        if ("APPROVED".equals(existing.getApprovalStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An approved purchase order cannot be deleted");
+        }
+
+        try {
+            approvalService.deleteForDocument(DOC_TYPE, poId);
+            poMaterialRequestRepository.replaceLinks(poId, Collections.emptyList(), null);
+            repository.deletePOItems(poId);
+            repository.deleteById(poId);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This purchase order is already used by another document and cannot be deleted");
+        }
     }
 
     /** Called by the approval engine when the last approver approves. */

@@ -575,6 +575,11 @@ public class PORepository {
                 rejectedBy, poId);
     }
 
+    /** Removes the PO header; its items must already be gone (see deletePOItems). */
+    public int deleteById(UUID poId) {
+        return jdbcTemplate.update("DELETE FROM po WHERE po_id = ?", poId);
+    }
+
     public int deletePOItems(UUID poId) {
 
         String sql = """

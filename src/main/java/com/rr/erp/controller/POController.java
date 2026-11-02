@@ -71,6 +71,13 @@ public class POController {
         return ResponseEntity.ok(service.submitPO(poId));
     }
 
+    // DELETE /api/po/{poId} — only until the PO is approved
+    @DeleteMapping("/{poId}")
+    public ResponseEntity<Void> deletePO(@PathVariable UUID poId) {
+        service.deletePO(poId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/{poId}")
     public ResponseEntity<PO> updatePO(
             @PathVariable UUID poId,

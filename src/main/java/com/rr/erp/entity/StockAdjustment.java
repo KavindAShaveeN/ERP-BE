@@ -21,6 +21,9 @@ public class StockAdjustment {
 
     private String reason;
 
+    // Employee code of whoever created the adjustment; set by the server at creation.
+    private String createdBy;
+
     private String approvedBy;
     private LocalDateTime approvedDate;
 

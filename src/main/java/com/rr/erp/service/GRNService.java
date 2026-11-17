@@ -102,6 +102,7 @@ public class GRNService {
         grn.setIsSubmitted(false);
         grn.setApprovedBy(null);
         grn.setApprovedDate(null);
+        grn.setCreatedBy(SecurityUtil.currentEmployeeCodeOrNull());
 
         validateGRN(grn);
         applyPoUomConversions(grn);

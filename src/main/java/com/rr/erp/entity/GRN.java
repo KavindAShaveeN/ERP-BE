@@ -45,6 +45,9 @@ public class GRN {
 
     private LocalDateTime checkedDate;
 
+    // Employee code of whoever created the GRN; set by the server at creation.
+    private String createdBy;
+
     private String checkedBy;
 
     private LocalDateTime approvedDate;

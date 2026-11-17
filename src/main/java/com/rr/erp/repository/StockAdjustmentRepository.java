@@ -33,9 +33,10 @@ public class StockAdjustmentRepository {
                     approved_by,
                     approved_date,
                     is_approved,
-                    remarks
+                    remarks,
+                    created_by
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         return jdbcTemplate.update(
@@ -48,7 +49,8 @@ public class StockAdjustmentRepository {
                 adjustment.getApprovedBy(),
                 adjustment.getApprovedDate(),
                 adjustment.getIsApproved(),
-                adjustment.getRemarks()
+                adjustment.getRemarks(),
+                adjustment.getCreatedBy()
         );
     }
 
@@ -141,6 +143,9 @@ public class StockAdjustmentRepository {
                         result.setIsSubmitted(
                                 rs.getBoolean("is_submitted")
                         );
+                        result.setCreatedBy(
+                                rs.getString("created_by")
+                        );
 
                         return result;
                     },
@@ -224,6 +229,10 @@ public class StockAdjustmentRepository {
 
                     adjustment.setIsSubmitted(
                             rs.getBoolean("is_submitted")
+                    );
+
+                    adjustment.setCreatedBy(
+                            rs.getString("created_by")
                     );
 
                     return adjustment;
@@ -314,6 +323,10 @@ public class StockAdjustmentRepository {
 
                     adjustment.setIsSubmitted(
                             rs.getBoolean("is_submitted")
+                    );
+
+                    adjustment.setCreatedBy(
+                            rs.getString("created_by")
                     );
 
                     return adjustment;

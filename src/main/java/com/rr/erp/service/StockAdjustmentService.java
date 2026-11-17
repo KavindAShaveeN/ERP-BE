@@ -50,6 +50,7 @@ public class StockAdjustmentService {
         adjustment.setIsSubmitted(false);
         adjustment.setApprovedBy(null);
         adjustment.setApprovedDate(null);
+        adjustment.setCreatedBy(SecurityUtil.currentEmployeeCodeOrNull());
 
         repository.createStockAdjustment(
                 adjustment

@@ -40,6 +40,7 @@ public class GRNRepository {
                 rs.getObject("checked_date", java.time.LocalDateTime.class)
         );
         grn.setCheckedBy(rs.getString("checked_by"));
+        grn.setCreatedBy(rs.getString("created_by"));
         grn.setApprovedDate(
                 rs.getObject("approved_date", java.time.LocalDateTime.class)
         );
@@ -118,9 +119,10 @@ public class GRNRepository {
                     vehicle_no,
                     gate_verified_by,
                     gate_verified_date,
-                    is_gate_verified
+                    is_gate_verified,
+                    created_by
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         jdbcTemplate.update(
@@ -147,7 +149,8 @@ public class GRNRepository {
                 grn.getVehicleNo(),
                 grn.getGateVerifiedBy(),
                 grn.getGateVerifiedDate(),
-                grn.getIsGateVerified()
+                grn.getIsGateVerified(),
+                grn.getCreatedBy()
         );
 
         insertItems(grnId, grn.getItems());
